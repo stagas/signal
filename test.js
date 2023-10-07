@@ -130,3 +130,22 @@ let list = [1,2,3]
 let s6 = signalStruct({list})
 s6.list[1] = 4
 assert.deepEqual(list,[1,4,3])
+
+let runs = 0
+class Vec2 {
+  x = 0
+  y = 0
+  get mag() {
+    runs++
+    return this.x * this.y
+  }
+}
+let v = signalStruct(new Vec2)
+v.x = 2
+v.y = 3
+console.log(v.mag)
+console.log(runs)
+console.log(v.mag)
+console.log(runs)
+console.log(v.mag)
+console.log(runs)
