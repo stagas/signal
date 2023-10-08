@@ -1,8 +1,8 @@
 {
-  "name": "signal-struct",
+  "name": "signal",
   "version": "1.10.0",
   "description": "Cumulative signal structure",
-  "main": "signal-struct.js",
+  "main": "src/signal.ts",
   "type": "module",
   "scripts": {
     "test": "node test"
@@ -27,12 +27,15 @@
   "homepage": "https://github.com/dy/signal-struct#readme",
   "devDependencies": {
     "@preact/signals": "^1.1.2",
+    "@total-typescript/ts-reset": "*",
+    "@types/jest": "*",
     "@webreflection/signal": "^0.2.5",
     "usignal": "^0.8.9"
   },
   "dependencies": {
     "@preact/signals-core": "^1.2.2",
     "sube": "^2.2.1",
+    "util": "file:../util",
     "utils": "file:../utils"
   }
 }

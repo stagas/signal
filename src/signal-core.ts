@@ -1,6 +1,5 @@
-import { MissingDependencyError } from 'utils';
-
-export { required } from 'utils'
+import { MissingDependencyErrorSymbol } from 'utils'
+export { requiredFast as of } from 'utils'
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -487,20 +486,27 @@ function cleanupSources(target: Computed | Effect) {
 
 declare class Computed<T = any> extends Signal<T> {
   _compute: () => T;
+  _setter: () => void;
   _sources?: Node;
   _globalVersion: number;
   _flags: number;
 
-  constructor(compute: () => T);
+  constructor(compute: () => T, setter?: () => void);
 
   _notify(): void;
   get value(): T;
+  set value(v: T);
 }
 
-function Computed(this: Computed, compute: () => unknown) {
+function throwMissingComputedSetter() {
+  throw new Error('Attempt to write to a Computed that does not have a setter.')
+}
+
+function Computed(this: Computed, compute: () => unknown, setter?: () => void) {
   Signal.call(this, undefined);
 
   this._compute = compute;
+  this._setter = setter ?? throwMissingComputedSetter
   this._sources = undefined;
   this._globalVersion = globalVersion - 1;
   this._flags = OUTDATED;
@@ -638,14 +644,17 @@ Object.defineProperty(Computed.prototype, "value", {
     }
     return this._value;
   },
+  set(v: any) {
+    this._setter(v)
+  }
 });
 
 interface ReadonlySignal<T = any> extends Signal<T> {
   readonly value: T;
 }
 
-function computed<T>(compute: () => T): ReadonlySignal<T> {
-  return new Computed(compute);
+function computed<T>(compute: () => T, setter?: () => void): ReadonlySignal<T> {
+  return new Computed(compute, setter);
 }
 
 function cleanupEffect(effect: Effect) {
@@ -738,7 +747,7 @@ Effect.prototype._callback = function () {
       this._cleanup = cleanup as EffectCleanup;
     }
   } catch (e) {
-    if (e instanceof MissingDependencyError) { }
+    if (e === MissingDependencyErrorSymbol) { }
     else throw e
   } finally {
     finish();
