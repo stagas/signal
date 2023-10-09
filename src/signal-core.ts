@@ -1,5 +1,4 @@
-import { MissingDependencyErrorSymbol } from 'utils'
-export { requiredFast as of } from 'utils'
+import { MissingDependencyErrorSymbol, required, requiredFast, noop, NonNull } from 'utils'
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -67,7 +66,9 @@ function endBatch(force?: boolean) {
       effect._flags &= ~NOTIFIED;
 
       if (!(effect._flags & DISPOSED) && needsToRecompute(effect)) {
+        const prevPos = pos
         try {
+          pos = EFFECT
           effect._callback();
         } catch (err) {
           if (!hasError) {
@@ -75,6 +76,7 @@ function endBatch(force?: boolean) {
             hasError = true;
           }
         }
+        pos = prevPos
       }
       effect = next;
     }
@@ -92,13 +94,22 @@ function endBatch(force?: boolean) {
 }
 
 function batch<T>(callback: () => T): T {
+  const prevPos = pos
   if (batchDepth > 0) {
-    return callback();
+    try {
+      pos = BATCH
+      return callback();
+    }
+    finally {
+      pos = prevPos
+    }
   }
 	/*@__INLINE__**/ startBatch();
   try {
     return callback();
-  } finally {
+  }
+  finally {
+    pos = prevPos
     endBatch();
   }
 }
@@ -259,11 +270,51 @@ declare class Signal<T = any> {
 
 /** @internal */
 // @ts-ignore internal Signal is viewed as function
-function Signal(this: Signal, value?: unknown) {
+
+function Signal(this: Signal, value?: unknown, isSuper?: boolean) {
   this._value = value;
   this._version = 0;
   this._node = undefined;
   this._targets = undefined;
+
+  if (!isSuper)
+    Object.defineProperty(this, 'value', {
+      get: function _valueGetter() {
+        const node = addDependency(this);
+        if (node !== undefined) {
+          node._version = this._version;
+        }
+        return this._value;
+      }.bind(this),
+      set: function _valueSetter(this: Signal, value) {
+        if (evalContext instanceof Computed) {
+          mutationDetected();
+        }
+
+        if (value !== this._value) {
+          if (batchIteration > 100) {
+            cycleDetected();
+          }
+
+          this._value = value;
+          this._version++;
+          globalVersion++;
+
+        /**@__INLINE__*/ startBatch();
+          try {
+            for (
+              let node = this._targets;
+              node !== undefined;
+              node = node._nextTarget
+            ) {
+              node._target._notify();
+            }
+          } finally {
+            endBatch();
+          }
+        }
+      }.bind(this),
+    });
 }
 
 Signal.prototype.brand = identifier
@@ -330,44 +381,6 @@ Signal.prototype.toJSON = function () {
 Signal.prototype.peek = function () {
   return this._value;
 };
-
-Object.defineProperty(Signal.prototype, "value", {
-  get() {
-    const node = addDependency(this);
-    if (node !== undefined) {
-      node._version = this._version;
-    }
-    return this._value;
-  },
-  set(this: Signal, value) {
-    if (evalContext instanceof Computed) {
-      mutationDetected();
-    }
-
-    if (value !== this._value) {
-      if (batchIteration > 100) {
-        cycleDetected();
-      }
-
-      this._value = value;
-      this._version++;
-      globalVersion++;
-
-			/**@__INLINE__*/ startBatch();
-      try {
-        for (
-          let node = this._targets;
-          node !== undefined;
-          node = node._nextTarget
-        ) {
-          node._target._notify();
-        }
-      } finally {
-        endBatch();
-      }
-    }
-  },
-});
 
 function signal<T>(value: T): Signal<T> {
   return new Signal(value);
@@ -486,7 +499,7 @@ function cleanupSources(target: Computed | Effect) {
 
 declare class Computed<T = any> extends Signal<T> {
   _compute: () => T;
-  _setter: () => void;
+  _setter: (v: any) => void;
   _sources?: Node;
   _globalVersion: number;
   _flags: number;
@@ -498,18 +511,32 @@ declare class Computed<T = any> extends Signal<T> {
   set value(v: T);
 }
 
-function throwMissingComputedSetter() {
-  throw new Error('Attempt to write to a Computed that does not have a setter.')
-}
-
-function Computed(this: Computed, compute: () => unknown, setter?: () => void) {
-  Signal.call(this, undefined);
+function Computed(this: Computed, compute: () => unknown, setter?: (v: any) => void) {
+  Signal.call(this, undefined, true);
 
   this._compute = compute;
-  this._setter = setter ?? throwMissingComputedSetter
+  this._setter = (setter ?? noop).bind(this)
   this._sources = undefined;
   this._globalVersion = globalVersion - 1;
   this._flags = OUTDATED;
+
+  Object.defineProperty(this, 'value', {
+    get: function _valueGetter() {
+      if (this._flags & RUNNING) {
+        cycleDetected();
+      }
+      const node = addDependency(this);
+      this._refresh();
+      if (node !== undefined) {
+        node._version = this._version;
+      }
+      if (this._flags & HAS_ERROR) {
+        throw this._value;
+      }
+      return this._value;
+    }.bind(this),
+    set: this._setter
+  });
 }
 
 Computed.prototype = new Signal() as Computed;
@@ -629,31 +656,11 @@ Computed.prototype.peek = function () {
   return this._value;
 };
 
-Object.defineProperty(Computed.prototype, "value", {
-  get() {
-    if (this._flags & RUNNING) {
-      cycleDetected();
-    }
-    const node = addDependency(this);
-    this._refresh();
-    if (node !== undefined) {
-      node._version = this._version;
-    }
-    if (this._flags & HAS_ERROR) {
-      throw this._value;
-    }
-    return this._value;
-  },
-  set(v: any) {
-    this._setter(v)
-  }
-});
+// interface ReadonlySignal<T = any> extends Signal<T> {
+//   readonly value: T;
+// }
 
-interface ReadonlySignal<T = any> extends Signal<T> {
-  readonly value: T;
-}
-
-function computed<T>(compute: () => T, setter?: () => void): ReadonlySignal<T> {
+function computed<T>(compute: () => T, setter?: () => void): Computed<T> {
   return new Computed(compute, setter);
 }
 
@@ -785,13 +792,26 @@ Effect.prototype._dispose = function () {
   }
 };
 
+let pos: any
+const EFFECT = 1
+const BATCH = 2
+
 function effect(c: () => unknown | EffectCleanup): () => void {
   const effect = new Effect(c);
+  const prevPos = pos
   try {
+    pos = EFFECT
     effect._callback();
-  } catch (err) {
-    effect._dispose();
+  }
+  catch (err) {
+    // it's better to swallow the dispose error (if any) and throw the original one
+    try {
+      effect._dispose();
+    } catch { }
     throw err;
+  }
+  finally {
+    pos = prevPos
   }
   // Return a bound function instead of a wrapper like `() => effect._dispose()`,
   // because bound functions seem to be just as fast and take up a lot less memory.
@@ -810,13 +830,23 @@ function ignore(callback?: () => any) {
 
 const flush = endBatch.bind(null, true)
 
+export function of<T extends object>(of: T): NonNull<T> {
+  if (pos === EFFECT && evalContext) {
+    return requiredFast(of)
+  }
+  else {
+    return required(of)
+  }
+}
+
 export {
   signal,
   computed,
   effect,
   batch,
   Signal,
-  type ReadonlySignal,
+  Computed,
+  // type ReadonlySignal,
   untracked,
   EffectCleanup,
   ignore,
