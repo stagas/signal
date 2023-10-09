@@ -1,4 +1,4 @@
-import { MissingDependencyErrorSymbol, required, requiredFast, noop, NonNull } from 'utils'
+import { MissingDependencyErrorSymbol, required, requiredFast, NonNull } from 'utils'
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -16,6 +16,13 @@ const OUTDATED = 1 << 2;
 const DISPOSED = 1 << 3;
 const HAS_ERROR = 1 << 4;
 const TRACKING = 1 << 5;
+
+let pos: any
+
+const EFFECT = 1
+const BATCH = 2
+
+const ignored = []
 
 // A linked list node used to track dependencies (sources) and dependents (targets).
 // Also used to remember the source's last version number that the target saw.
@@ -70,7 +77,8 @@ function endBatch(force?: boolean) {
         try {
           pos = EFFECT
           effect._callback();
-        } catch (err) {
+        }
+        catch (err) {
           if (!hasError) {
             error = err;
             hasError = true;
@@ -93,7 +101,7 @@ function endBatch(force?: boolean) {
   }
 }
 
-function batch<T>(callback: () => T, thisArg?: any, args?: any[]): T {
+export function batch<T>(callback: () => T, thisArg?: any, args?: any[]): T {
   const prevPos = pos
   if (batchDepth > 0) {
     try {
@@ -119,7 +127,7 @@ let evalContext: Computed | Effect | undefined = undefined;
 
 let untrackedDepth = 0;
 
-function untracked<T>(callback: () => T): T {
+export function untracked<T>(callback: () => T): T {
   if (untrackedDepth > 0) {
     return callback();
   }
@@ -225,7 +233,7 @@ function addDependency(signal: Signal): Node | undefined {
 }
 
 // @ts-ignore internal Signal is viewed as a function
-declare class Signal<T = any> {
+export declare class Signal<T = any> {
   /** @internal */
   _value: unknown;
 
@@ -275,7 +283,7 @@ declare class Signal<T = any> {
 /** @internal */
 // @ts-ignore internal Signal is viewed as function
 
-function Signal(this: Signal, value?: unknown) {
+export function Signal(this: Signal, value?: unknown) {
   this._value = value;
   this._version = 0;
   this._node = undefined;
@@ -326,7 +334,8 @@ Signal.prototype.set = function (value) {
       ) {
         node._target._notify();
       }
-    } finally {
+    }
+    finally {
       endBatch();
     }
   }
@@ -373,7 +382,8 @@ Signal.prototype.subscribe = function (fn) {
     this._flags &= ~TRACKING;
     try {
       fn(value);
-    } finally {
+    }
+    finally {
       this._flags |= flag;
     }
   }, this);
@@ -395,7 +405,7 @@ Signal.prototype.peek = function () {
   return this._value;
 };
 
-function signal<T>(value: T): Signal<T> {
+export function signal<T>(value: T): Signal<T> {
   return new Signal(value);
 }
 
@@ -510,28 +520,28 @@ function cleanupSources(target: Computed | Effect) {
   target._sources = head;
 }
 
-declare class Computed<T = any> extends Signal<T> {
+export declare class Computed<T = any> extends Signal<T> {
   _compute: () => T;
   _setter: (v: any) => void;
   _sources?: Node;
   _globalVersion: number;
   _flags: number;
+  _thisArg: any
 
-  constructor(compute: () => T, setter?: (v: any) => void);
+  constructor(compute: () => T, setter?: (v: any) => void, thisArg?: any);
 
   _notify(): void;
-  // get value(): T;
-  // set value(v: T);
 }
 
-function Computed(this: Computed, compute: () => unknown, setter?: (v: any) => void) {
+export function Computed(this: Computed, compute: () => unknown, setter?: (v: any) => void, thisArg?: any) {
   Signal.call(this, undefined);
 
   this._compute = compute;
-  this._setter = setter //(setter ?? noop) //.bind(this)
+  this._setter = setter;
   this._sources = undefined;
   this._globalVersion = globalVersion - 1;
   this._flags = OUTDATED;
+  this._thisArg = thisArg;
 }
 
 Computed.prototype = new Signal() as Computed;
@@ -563,7 +573,7 @@ Computed.prototype.get = function () {
 }
 
 Computed.prototype.set = function (v) {
-  this._setter?.(v)
+  this._setter?.call(this._thisArg, v)
 }
 
 Computed.prototype._refresh = function () {
@@ -598,7 +608,7 @@ Computed.prototype._refresh = function () {
   try {
     prepareSources(this);
     evalContext = this;
-    const value = this._compute();
+    const value = this._compute.call(this._thisArg);
     if (
       this._flags & HAS_ERROR ||
       this._value !== value ||
@@ -608,7 +618,8 @@ Computed.prototype._refresh = function () {
       this._flags &= ~HAS_ERROR;
       this._version++;
     }
-  } catch (err) {
+  }
+  catch (err) {
     this._value = err;
     this._flags |= HAS_ERROR;
     this._version++;
@@ -685,8 +696,8 @@ Computed.prototype.peek = function () {
 //   readonly value: T;
 // }
 
-function computed<T>(compute: () => T, setter?: (v: any) => void): Computed<T> {
-  return new Computed(compute, setter);
+export function computed<T>(compute: () => T, setter?: (v: any) => void, thisArg?: any): Computed<T> {
+  return new Computed(compute, setter, thisArg);
 }
 
 function cleanupEffect(effect: Effect) {
@@ -701,12 +712,14 @@ function cleanupEffect(effect: Effect) {
     evalContext = undefined;
     try {
       cleanup();
-    } catch (err) {
+    }
+    catch (err) {
       effect._flags &= ~RUNNING;
       effect._flags |= DISPOSED;
       disposeEffect(effect);
       throw err;
-    } finally {
+    }
+    finally {
       evalContext = prevContext;
       endBatch();
     }
@@ -744,7 +757,7 @@ function endEffect(this: Effect, prevContext?: Computed | Effect) {
   endBatch();
 }
 
-type EffectCleanup = () => unknown;
+export type EffectCleanup = () => unknown;
 declare class Effect {
   _compute?: () => unknown | EffectCleanup;
   _cleanup?: () => unknown;
@@ -821,16 +834,15 @@ Effect.prototype._dispose = function () {
   }
 };
 
-let pos: any
-const EFFECT = 1
-const BATCH = 2
-
-function effect(c: () => unknown | EffectCleanup, thisArg?: any): () => void {
+export function effect(c: () => unknown | EffectCleanup, thisArg?: any): () => void {
   const effect = new Effect(c, thisArg);
   const prevPos = pos
   try {
     pos = EFFECT
     effect._callback();
+    // Return a bound function instead of a wrapper like `() => effect._dispose()`,
+    // because bound functions seem to be just as fast and take up a lot less memory.
+    return effect._dispose.bind(effect);
   }
   catch (err) {
     // it's better to swallow the dispose error (if any) and throw the original one
@@ -842,22 +854,18 @@ function effect(c: () => unknown | EffectCleanup, thisArg?: any): () => void {
   finally {
     pos = prevPos
   }
-  // Return a bound function instead of a wrapper like `() => effect._dispose()`,
-  // because bound functions seem to be just as fast and take up a lot less memory.
-  return effect._dispose.bind(effect);
 }
 
-const ignored = []
-function ignore<T>(c: () => T): T
-function ignore(): void
-function ignore(callback?: () => any) {
+export function ignore<T>(c: () => T): T
+export function ignore(): void
+export function ignore(callback?: () => any) {
   if (callback) return untracked(callback)
   ignored.push(evalContext)
   evalContext = undefined
 }
 // function untracked<T>(callback: () => T): T {
 
-const flush = endBatch.bind(null, true)
+export const flush = endBatch.bind(null, true)
 
 export function of<T extends object>(of: T): NonNull<T> {
   if (pos === EFFECT && evalContext) {
@@ -867,17 +875,3 @@ export function of<T extends object>(of: T): NonNull<T> {
     return required(of)
   }
 }
-
-export {
-  signal,
-  computed,
-  effect,
-  batch,
-  Signal,
-  Computed,
-  // type ReadonlySignal,
-  untracked,
-  EffectCleanup,
-  ignore,
-  flush
-};

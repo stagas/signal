@@ -132,8 +132,9 @@ const s$: {
       // getter turns into computed
       if (desc.get) {
         const s: Computed = computed(
-          desc.get.bind(state),
-          desc.set?.bind(state)
+          desc.get,
+          desc.set,
+          state
         )
         signals[key] = s
         properties[key] = {
