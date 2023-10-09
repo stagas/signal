@@ -1,5 +1,5 @@
 import { DeepPartial, assign, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject } from 'utils'
-import { Computed, Signal, signal, computed, batch, effect, EffectCleanup } from './signal-core.ts'
+import { Computed, Signal, signal, computed, batch, effect, EffectCleanup, __signal__ } from './signal-core.ts'
 import * as util from './signal-core.ts'
 export * from './signal-core.ts'
 
@@ -14,13 +14,9 @@ type CtorGuard<T> = T extends Ctor ? never : T
 
 type Props<T> = DeepPartial<T>
 
-type Alias = { [__alias__]: string }
-
 type From = {
-  [__from__]: {
-    it: any
-    path: string[]
-  }
+  it: any
+  path: string[]
 }
 
 type Fx = {
@@ -52,23 +48,23 @@ const __fn__ = Symbol('fn')
 const __from__ = Symbol('from')
 
 function isSignal(v: any): v is Signal {
-  return v && v.peek
+  return v && v[__signal__]
 }
-function isStruct<T>(v: T): v is $<T> {
+function isStruct<T extends object>(v: T): v is $<T> {
   return v && v[__struct__]
 }
-function isAlias(v: any): v is Alias {
+function isAlias(v: any): string | undefined {
   return v && v[__alias__]
 }
-function isFrom(v: any): v is From {
+function isFrom(v: any): From | undefined {
   return v && v[__from__]
 }
 function isFx(v: any): v is Fx {
   return v && v[__fx__]
 }
-function isFn(v: any): v is Fn {
-  return v && v[__fn__]
-}
+// function isFn(v: any): v is Fn {
+//   return v && v[__fn__]
+// }
 
 export function alias<T, K extends keyof T>(of: T, from: K): T[K] {
   return { [__alias__]: from } as any
@@ -92,8 +88,10 @@ export function dispose(fn: EffectCleanup | (unknown | EffectCleanup)[] | $<unkn
 let initDepth = 0
 const effects: { fx: Fx, state: any }[] = []
 const forbiddenKeys = new Set([
-  'constructor'
+  '__proto__',
+  'constructor',
 ])
+const hidden = { configurable: false, enumerable: false }
 
 const s$: {
   <T extends Ctor>(expect_new: T, please_use_new?: any): CtorGuard<T>
@@ -111,11 +109,9 @@ const s$: {
   // define signal accessors - creates signals for all object props
   if (isObject(values)) {
     const aliases: { fromKey: string, toKey: string }[] = []
-    const froms: { from: From[typeof __from__], key: string }[] = []
     const state = values
     const signals = {}
     const descs = getAllPropertyDescriptors(values)
-    const hidden = { configurable: false, enumerable: false }
     const properties: PropertyDescriptorMap = {
       $: { ...hidden, value: signals },
       [__struct__]: { ...hidden, value: true },
@@ -149,9 +145,11 @@ const s$: {
       // regular value creates signal accessor
       else {
         let value: unknown = desc.value
+        let from: From
+        let fromKey: string
 
-        if (isFrom(value)) {
-          const from = value[__from__]
+        if (from = isFrom(value)) {
+          // const from = value[__from__]
           const s = signal(void 0)
           signals[key] = s
           properties[key] = {
@@ -197,8 +195,8 @@ const s$: {
             state
           })
         }
-        else if (isAlias(value)) {
-          aliases.push({ fromKey: value[__alias__], toKey: key })
+        else if (fromKey = isAlias(value)) {
+          aliases.push({ fromKey, toKey: key })
         }
         else {
           // TODO: function in props?

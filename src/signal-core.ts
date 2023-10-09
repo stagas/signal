@@ -7,7 +7,7 @@ function mutationDetected(): never {
   throw new Error("Computed cannot have side-effects");
 }
 
-const identifier = Symbol.for('preact-signals')
+export const __signal__ = Symbol.for('preact-signals')
 
 // Flags for Computed and Effect.
 const RUNNING = 1 << 0;
@@ -271,8 +271,6 @@ export declare class Signal<T = any> {
 
   peek(): T;
 
-  brand: typeof identifier;
-
   get(): T;
   set(value: T): void
 
@@ -290,7 +288,7 @@ export function Signal(this: Signal, value?: unknown) {
   this._targets = undefined;
 }
 
-Signal.prototype.brand = identifier
+Signal.prototype[__signal__] = true
 
 Object.defineProperty(Signal.prototype, 'value', {
   enumerable: false,
