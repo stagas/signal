@@ -1,17 +1,34 @@
-import { assign, deepMerge, getAllPropertyDescriptors, getPropertyDescriptor, isCtor, isFunction, isObject } from 'utils'
+import { DeepPartial, assign, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject } from 'utils'
 import { Computed, Signal, signal, computed, batch, effect, EffectCleanup } from './signal-core.ts'
 import * as util from './signal-core.ts'
 export * from './signal-core.ts'
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
-type Ctor<T> = { new(): T }
-type CtorWithArgs = { new(...args: any[]): any }
+
+type Ctor = {
+  new(): any
+  new(...args: any[]): any
+}
+
+type CtorGuard<T> = T extends Ctor ? never : T
+
+type Props<T> = DeepPartial<T>
+
 type Alias = { [__alias__]: string }
+
+type From = {
+  [__from__]: {
+    it: any
+    path: string[]
+  }
+}
+
 type Fx = {
   [__fx__]: true
   (): EffectCleanup | (EffectCleanup | unknown)[] | unknown | void
   dispose?(): void
 }
+
 type Fn = { [__fn__]: true }
 
 export type $<T> = {
@@ -22,12 +39,17 @@ export type $<T> = {
   [__effects__]: Map<Fx, (unknown | EffectCleanup)>
 }
 
+export const Err = errs({
+  InvalidSignalType: [TypeError],
+})
+
 const __alias__ = Symbol('alias')
 const __struct__ = Symbol('struct')
 const __signals__ = Symbol('signals')
 const __effects__ = Symbol('effects')
 const __fx__ = Symbol('fx')
 const __fn__ = Symbol('fn')
+const __from__ = Symbol('from')
 
 function isSignal(v: any): v is Signal {
   return v && v.peek
@@ -37,6 +59,9 @@ function isStruct<T>(v: T): v is $<T> {
 }
 function isAlias(v: any): v is Alias {
   return v && v[__alias__]
+}
+function isFrom(v: any): v is From {
+  return v && v[__from__]
 }
 function isFx(v: any): v is Fx {
   return v && v[__fx__]
@@ -70,31 +95,10 @@ const forbiddenKeys = new Set([
   'constructor'
 ])
 
-type Props<T> = Partial<T>
-
-function createArray<T extends object>(
-  length: number,
-  ctor: Ctor<T>,
-  p?: Props<T> | ((i: number) => Props<T>)): $<T>[] {
-  let props: any = p
-  if (typeof p === 'object') {
-    props = () => p
-  }
-  return Array.from({ length }, (_, i) => s$(ctor, props?.(i)))
-}
-
 const s$: {
-  <T extends object>(of: Ctor<T>, p?: Props<T>): $<T>
-  <T extends object>(of: T, p?: Props<T>): T extends CtorWithArgs ? never : $<T>
-  <T extends object>(cnt: number, of: Ctor<T>, p?: Props<T> | ((i: number) => Props<T>)): $<T>[]
-} = function struct$(countOrValues: any, propsOrValues?: any, propsOrVoid?: any): any {
-  if (typeof countOrValues === 'number') {
-    return createArray(countOrValues, propsOrValues, propsOrVoid)
-  }
-
-  let values = countOrValues as object
-  let props = propsOrValues as object
-
+  <T extends Ctor>(expect_new: T, please_use_new?: any): CtorGuard<T>
+  <T extends object>(of: T, p?: Props<T>): $<T>
+} = function struct$(values: any, props?: any): any {
   if (isStruct(values) && !props) return values as any
 
   props ??= {}
@@ -104,13 +108,10 @@ const s$: {
 
   initDepth++
 
-  if (isCtor(values)) {
-    values = new values
-  }
-
   // define signal accessors - creates signals for all object props
   if (isObject(values)) {
     const aliases: { fromKey: string, toKey: string }[] = []
+    const froms: { from: From[typeof __from__], key: string }[] = []
     const state = values
     const signals = {}
     const descs = getAllPropertyDescriptors(values)
@@ -141,7 +142,47 @@ const s$: {
       else {
         let value: unknown = desc.value
 
-        if (isAlias(value)) {
+        if (isFrom(value)) {
+          const from = value[__from__]
+          const s = signal(void 0)
+          signals[key] = s
+          properties[key] = getPropertyDescriptor(s, 'value')
+          effects.push({
+            fx: (() => {
+              let off
+
+              const fxfn = () => {
+                let { it } = from
+
+                for (const p of from.path) {
+                  if (!(p in it)) return
+                  it = it[p]
+                  if (it == null) return
+                }
+
+                off?.()
+                state[__effects__].delete(fxfn)
+
+                if (isSignal(it)) {
+                  it.subscribe((value) => {
+                    state[key] = value
+                  })
+                  signals[key].subscribe((value) => {
+                    it.value = value
+                  })
+                }
+                else {
+                  state[key] = it
+                }
+              }
+
+              off = fx(fxfn)
+              state[__effects__].set(fxfn, off)
+            }) as any,
+            state
+          })
+        }
+        else if (isAlias(value)) {
           aliases.push({ fromKey: value[__alias__], toKey: key })
         }
         else {
@@ -198,7 +239,7 @@ const s$: {
     return state
   }
   else {
-    throw new TypeError('Invalid signal type: ' + typeof values)
+    throw new Err.InvalidSignalType(typeof values)
   }
 }
 
@@ -233,11 +274,27 @@ export const fx: {
   return d
 }
 
+export function from<T extends object>(it: T): T {
+  const path: string[] = []
+  const proxy = new Proxy(it, {
+    get(target: any, key: string | symbol) {
+      if (key === __from__) return { it, path }
+      if (typeof key === 'symbol') {
+        throw new Error('Attempt to access unknown symbol in "from".')
+      }
+      path.push(key)
+      return proxy
+    }
+  })
+  return proxy
+}
+
 export const $ = Object.assign(s$, {
   dispose,
   fn,
   fx,
   alias,
+  from,
 }, util)
 
 export default $
@@ -285,7 +342,7 @@ export function test_Signal() {
     })
 
     it('mirror alias in another struct', () => {
-      const a = $(class {
+      const a = $(new class {
         v = 0
         x = alias(this, 'v')
       })
@@ -298,14 +355,10 @@ export function test_Signal() {
       expect(b.y).toEqual(1)
     })
 
-    it('type errors', () => {
-      $(class { })
-      $({})
-      $(class {
-        something() {
-          $(this)
-        }
-      })
+    it('invalid signal type error', () => {
+      expect(() => {
+        const x = $(class { })
+      }).toThrow(Err.InvalidSignalType)
     })
 
     describe('fx', () => {
