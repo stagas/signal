@@ -93,12 +93,12 @@ function endBatch(force?: boolean) {
   }
 }
 
-function batch<T>(callback: () => T): T {
+function batch<T>(callback: () => T, thisArg?: any, args?: any[]): T {
   const prevPos = pos
   if (batchDepth > 0) {
     try {
       pos = BATCH
-      return callback();
+      return callback.apply(thisArg, args);
     }
     finally {
       pos = prevPos
@@ -106,7 +106,7 @@ function batch<T>(callback: () => T): T {
   }
 	/*@__INLINE__**/ startBatch();
   try {
-    return callback();
+    return callback.apply(thisArg, args);
   }
   finally {
     pos = prevPos
@@ -128,7 +128,8 @@ function untracked<T>(callback: () => T): T {
   untrackedDepth++;
   try {
     return callback();
-  } finally {
+  }
+  finally {
     untrackedDepth--;
     evalContext = prevContext;
   }
@@ -264,6 +265,9 @@ declare class Signal<T = any> {
 
   brand: typeof identifier;
 
+  get(): T;
+  set(value: T): void
+
   get value(): T;
   set value(value: T);
 }
@@ -271,53 +275,62 @@ declare class Signal<T = any> {
 /** @internal */
 // @ts-ignore internal Signal is viewed as function
 
-function Signal(this: Signal, value?: unknown, isSuper?: boolean) {
+function Signal(this: Signal, value?: unknown) {
   this._value = value;
   this._version = 0;
   this._node = undefined;
   this._targets = undefined;
-
-  if (!isSuper)
-    Object.defineProperty(this, 'value', {
-      get: function _valueGetter() {
-        const node = addDependency(this);
-        if (node !== undefined) {
-          node._version = this._version;
-        }
-        return this._value;
-      }.bind(this),
-      set: function _valueSetter(this: Signal, value) {
-        if (evalContext instanceof Computed) {
-          mutationDetected();
-        }
-
-        if (value !== this._value) {
-          if (batchIteration > 100) {
-            cycleDetected();
-          }
-
-          this._value = value;
-          this._version++;
-          globalVersion++;
-
-        /**@__INLINE__*/ startBatch();
-          try {
-            for (
-              let node = this._targets;
-              node !== undefined;
-              node = node._nextTarget
-            ) {
-              node._target._notify();
-            }
-          } finally {
-            endBatch();
-          }
-        }
-      }.bind(this),
-    });
 }
 
 Signal.prototype.brand = identifier
+
+Object.defineProperty(Signal.prototype, 'value', {
+  enumerable: false,
+  configurable: false,
+  get() {
+    return this.get()
+  },
+  set(v) {
+    this.set(v)
+  }
+})
+
+Signal.prototype.get = function () {
+  const node = addDependency(this);
+  if (node !== undefined) {
+    node._version = this._version;
+  }
+  return this._value;
+}
+
+Signal.prototype.set = function (value) {
+  if (evalContext instanceof Computed) {
+    mutationDetected();
+  }
+
+  if (value !== this._value) {
+    if (batchIteration > 100) {
+      cycleDetected();
+    }
+
+    this._value = value;
+    this._version++;
+    globalVersion++;
+
+    /**@__INLINE__*/ startBatch();
+    try {
+      for (
+        let node = this._targets;
+        node !== undefined;
+        node = node._nextTarget
+      ) {
+        node._target._notify();
+      }
+    } finally {
+      endBatch();
+    }
+  }
+}
 
 Signal.prototype._refresh = function () {
   return true;
@@ -504,42 +517,54 @@ declare class Computed<T = any> extends Signal<T> {
   _globalVersion: number;
   _flags: number;
 
-  constructor(compute: () => T, setter?: () => void);
+  constructor(compute: () => T, setter?: (v: any) => void);
 
   _notify(): void;
-  get value(): T;
-  set value(v: T);
+  // get value(): T;
+  // set value(v: T);
 }
 
 function Computed(this: Computed, compute: () => unknown, setter?: (v: any) => void) {
-  Signal.call(this, undefined, true);
+  Signal.call(this, undefined);
 
   this._compute = compute;
-  this._setter = (setter ?? noop).bind(this)
+  this._setter = setter //(setter ?? noop) //.bind(this)
   this._sources = undefined;
   this._globalVersion = globalVersion - 1;
   this._flags = OUTDATED;
-
-  Object.defineProperty(this, 'value', {
-    get: function _valueGetter() {
-      if (this._flags & RUNNING) {
-        cycleDetected();
-      }
-      const node = addDependency(this);
-      this._refresh();
-      if (node !== undefined) {
-        node._version = this._version;
-      }
-      if (this._flags & HAS_ERROR) {
-        throw this._value;
-      }
-      return this._value;
-    }.bind(this),
-    set: this._setter
-  });
 }
 
 Computed.prototype = new Signal() as Computed;
+
+Object.defineProperty(Computed.prototype, 'value', {
+  enumerable: false,
+  configurable: false,
+  get() {
+    return this.get()
+  },
+  set(v) {
+    this.set(v)
+  }
+});
+
+Computed.prototype.get = function () {
+  if (this._flags & RUNNING) {
+    cycleDetected();
+  }
+  const node = addDependency(this);
+  this._refresh();
+  if (node !== undefined) {
+    node._version = this._version;
+  }
+  if (this._flags & HAS_ERROR) {
+    throw this._value;
+  }
+  return this._value;
+}
+
+Computed.prototype.set = function (v) {
+  this._setter?.(v)
+}
 
 Computed.prototype._refresh = function () {
   this._flags &= ~NOTIFIED;
@@ -660,7 +685,7 @@ Computed.prototype.peek = function () {
 //   readonly value: T;
 // }
 
-function computed<T>(compute: () => T, setter?: () => void): Computed<T> {
+function computed<T>(compute: () => T, setter?: (v: any) => void): Computed<T> {
   return new Computed(compute, setter);
 }
 

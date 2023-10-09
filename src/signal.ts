@@ -136,7 +136,14 @@ const s$: {
           desc.set?.bind(state)
         )
         signals[key] = s
-        properties[key] = getPropertyDescriptor(s, 'value')
+        properties[key] = {
+          get() {
+            return s.value
+          },
+          set(v) {
+            s.value = v
+          }
+        }
       }
       // regular value creates signal accessor
       else {
@@ -146,7 +153,14 @@ const s$: {
           const from = value[__from__]
           const s = signal(void 0)
           signals[key] = s
-          properties[key] = getPropertyDescriptor(s, 'value')
+          properties[key] = {
+            get() {
+              return s.value
+            },
+            set(v) {
+              s.value = v
+            }
+          }
           effects.push({
             fx: (() => {
               let off
@@ -211,7 +225,14 @@ const s$: {
               s = signal(value)
             }
             signals[key] = s
-            properties[key] = getPropertyDescriptor(s, 'value')
+            properties[key] = {
+              get() {
+                return s.value
+              },
+              set(v) {
+                s.value = v
+              }
+            }
           }
         }
       }
@@ -246,8 +267,7 @@ const s$: {
 export const fn = function fnDecorator(t: any, k: string, d: PropertyDescriptor) {
   const fn = d.value
   d.value = function _fn(...args: any[]) {
-    const self = this
-    return batch(function __fn() { return fn.apply(self, args) })
+    return batch(fn, this, args)
   }
   d.value[__fn__] = true
   return d
