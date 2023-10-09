@@ -274,20 +274,19 @@ export const fn = function fnDecorator(t: any, k: string, d: PropertyDescriptor)
 }
 
 export const fx: {
-  (c: () => unknown | EffectCleanup): () => void
+  (c: () => unknown | EffectCleanup, thisArg?: any): () => void
   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
 } = function fxDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
   if (isFunction(t)) {
-    return effect(t)
+    return effect(t, k)
   }
   const fn = d.value
   d.value = function _fx() {
-    const self = this
-    if (self[__effects__].has(_fx)) {
+    if (this[__effects__].has(_fx)) {
       throw new Error('Effect cannot be invoked more than once.')
     }
-    const dispose = effect(function __fx() { return fn.call(self) })
-    self[__effects__].set(_fx, dispose)
+    const dispose = effect(fn, this)
+    this[__effects__].set(_fx, dispose)
     return dispose
   }
   d.value[__fx__] = true

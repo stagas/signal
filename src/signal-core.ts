@@ -376,7 +376,7 @@ Signal.prototype.subscribe = function (fn) {
     } finally {
       this._flags |= flag;
     }
-  });
+  }, this);
 };
 
 Signal.prototype.valueOf = function () {
@@ -751,8 +751,9 @@ declare class Effect {
   _sources?: Node;
   _nextBatchedEffect?: Effect;
   _flags: number;
+  _thisArg: any
 
-  constructor(compute: () => unknown | EffectCleanup);
+  constructor(compute: () => unknown | EffectCleanup, thisArg?: any);
 
   _callback(): void;
   _start(): () => void;
@@ -760,12 +761,13 @@ declare class Effect {
   _dispose(): void;
 }
 
-function Effect(this: Effect, compute: () => unknown | EffectCleanup) {
+function Effect(this: Effect, compute: () => unknown | EffectCleanup, thisArg?: any) {
   this._compute = compute;
   this._cleanup = undefined;
   this._sources = undefined;
   this._nextBatchedEffect = undefined;
   this._flags = TRACKING;
+  this._thisArg = thisArg;
 }
 
 Effect.prototype._callback = function () {
@@ -774,14 +776,16 @@ Effect.prototype._callback = function () {
     if (this._flags & DISPOSED) return;
     if (this._compute === undefined) return;
 
-    const cleanup = this._compute();
+    const cleanup = this._compute.call(this._thisArg);
     if (typeof cleanup === "function") {
       this._cleanup = cleanup as EffectCleanup;
     }
-  } catch (e) {
+  }
+  catch (e) {
     if (e === MissingDependencyErrorSymbol) { }
     else throw e
-  } finally {
+  }
+  finally {
     finish();
   }
 };
@@ -821,8 +825,8 @@ let pos: any
 const EFFECT = 1
 const BATCH = 2
 
-function effect(c: () => unknown | EffectCleanup): () => void {
-  const effect = new Effect(c);
+function effect(c: () => unknown | EffectCleanup, thisArg?: any): () => void {
+  const effect = new Effect(c, thisArg);
   const prevPos = pos
   try {
     pos = EFFECT
