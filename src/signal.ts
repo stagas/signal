@@ -371,13 +371,13 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
-export function signal(t: any) {
+export function signal<T extends Ctor>(t: Ctor): T {
   return class extends t {
     constructor(...args: any[]) {
       super(...args)
       return $(this)
     }
-  }
+  } as T
 }
 
 export const $ = Object.assign(s$, {
@@ -396,11 +396,20 @@ export function test_Signal() {
   // @env browser
   describe('Signal', () => {
     fit('class decorator', () => {
+      let runs = 0
       @signal
       class Foo {
-
+        x = 0
+        get y() {
+          runs++
+          return this.x + 1
+        }
       }
-      console.log(new Foo)
+      const foo = new Foo()
+      expect(foo.y).toEqual(1)
+      expect(runs).toEqual(1)
+      expect(foo.y).toEqual(1)
+      expect(runs).toEqual(1)
     })
     it('fx', () => {
       const s = $({ x: 0 })
