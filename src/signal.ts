@@ -430,7 +430,7 @@ export function test_Signal() {
           const { x, y } = this
           runs++
         }
-        update() {
+        @fn update() {
           this.x++
           this.y++
         }
