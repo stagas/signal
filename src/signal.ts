@@ -310,9 +310,13 @@ function wrapFn(fn: any) {
 }
 
 export const fn: {
+  <T extends (...args: any[]) => any>(fn: T): T
   (t: any, k: string, d: PropertyDescriptor): PropertyDescriptor
   (t: any, k: string): void
-} = function fnDecorator(t: any, k: string, d?: PropertyDescriptor) {
+} = function fnDecorator(t: any, k?: string, d?: PropertyDescriptor) {
+  if (!k) {
+    return wrapFn(t) as any
+  }
   if (!d) {
     let props = ctorsPropDecos.get(t)
     if (!props) ctorsPropDecos.set(t, props = new Map())
