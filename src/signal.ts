@@ -371,7 +371,7 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
-export function signalify<T extends Ctor>(ctor: Ctor): T {
+export function reactive<T extends Ctor>(ctor: Ctor): T {
   return class extends ctor {
     constructor(...args: any[]) {
       super(...args)
@@ -397,7 +397,7 @@ export function test_Signal() {
   describe('Signal', () => {
     it('class decorator', () => {
       let runs = 0
-      @signalify
+      @reactive
       class Foo {
         x = 0
         get y() {
