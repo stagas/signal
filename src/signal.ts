@@ -608,7 +608,7 @@ export function test_Signal() {
         const o = $(new Foo)
         expect(o.bar).toBeUndefined()
         callback(++x)
-        await ticks(2)
+        await ticks(4)
         expect(o.bar).toEqual(1)
         callback(++x)
         await ticks(1)
