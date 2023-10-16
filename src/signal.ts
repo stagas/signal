@@ -452,6 +452,41 @@ export function test_Signal() {
       expect(foo.y).toEqual(3)
       expect(runs).toEqual(2)
     })
+
+    fit('class decorator with inheritance', () => {
+      let runs = 0
+
+      @reactive
+      class Bar {
+        x = 0
+        get y() {
+          runs++
+          return this.x + 1
+        }
+      }
+
+      @reactive
+      class Foo extends Bar {
+        x = 0
+        get y() {
+          runs++
+          return this.x + 1
+        }
+      }
+
+      const foo = new Foo()
+
+      expect(foo.y).toEqual(1)
+      expect(runs).toEqual(1)
+      expect(foo.y).toEqual(1)
+      expect(runs).toEqual(1)
+      foo.x = 2
+      expect(foo.y).toEqual(3)
+      expect(runs).toEqual(2)
+      expect(foo.y).toEqual(3)
+      expect(runs).toEqual(2)
+    })
+
     it('fn proto', () => {
       let runs = 0
 
