@@ -414,6 +414,7 @@ export function reactive<T extends Ctor>(ctor: Ctor): T {
   Object.defineProperty(newctor, 'name', {
     value: ctor.name,
     configurable: false,
+    writable: false,
   })
   return newctor
 }
