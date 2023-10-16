@@ -371,6 +371,11 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
+export function signal(t) {
+  console.log(t)
+  return t
+}
+
 export const $ = Object.assign(s$, {
   dispose,
   fn,
@@ -386,6 +391,12 @@ export default $
 export function test_Signal() {
   // @env browser
   describe('Signal', () => {
+    fit('class decorator', () => {
+      @signal
+      class Foo {
+
+      }
+    })
     it('fx', () => {
       const s = $({ x: 0 })
       let runs = 0
