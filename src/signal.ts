@@ -395,7 +395,7 @@ export function test_Signal() {
         res.push(s.x)
       })
       s.x = 1
-      expect(runs).toEqual(3)
+      expect(runs).toEqual(2)
       expect(res).toEqual([0, 1])
     })
 
