@@ -96,7 +96,6 @@ const s$: {
   <T extends object>(of: T, p?: Props<T>): $<T>
 } = function struct$(state: any, props?: any): any {
   if (isStruct(state)) return assign(state, props)
-  if (isFunction(state)) return reactive(state as any)
   if (!isObject(state)) throw new Err.InvalidSignalType(typeof state)
 
   const descs = getAllPropertyDescriptors(state)
@@ -404,21 +403,6 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
-export function reactive<T extends Ctor>(ctor: Ctor): T {
-  const newctor = class Ctor extends ctor {
-    constructor(...args: any[]) {
-      super(...args)
-      if (new.target === newctor) s$(this)
-    }
-  } as T
-  Object.defineProperty(newctor, 'name', {
-    value: ctor.name,
-    configurable: false,
-    writable: false,
-  })
-  return newctor
-}
-
 export const $ = Object.assign(s$, {
   dispose,
   fn,
@@ -434,65 +418,65 @@ export default $
 export function test_Signal() {
   // @env browser
   describe('Signal', () => {
-    it('class decorator', () => {
-      let runs = 0
+    // it('class decorator', () => {
+    //   let runs = 0
 
-      @reactive
-      class Foo {
-        x = 0
-        get y() {
-          runs++
-          return this.x + 1
-        }
-      }
+    //   @reactive
+    //   class Foo {
+    //     x = 0
+    //     get y() {
+    //       runs++
+    //       return this.x + 1
+    //     }
+    //   }
 
-      const foo = new Foo()
+    //   const foo = new Foo()
 
-      expect(foo.y).toEqual(1)
-      expect(runs).toEqual(1)
-      expect(foo.y).toEqual(1)
-      expect(runs).toEqual(1)
-      foo.x = 2
-      expect(foo.y).toEqual(3)
-      expect(runs).toEqual(2)
-      expect(foo.y).toEqual(3)
-      expect(runs).toEqual(2)
-    })
+    //   expect(foo.y).toEqual(1)
+    //   expect(runs).toEqual(1)
+    //   expect(foo.y).toEqual(1)
+    //   expect(runs).toEqual(1)
+    //   foo.x = 2
+    //   expect(foo.y).toEqual(3)
+    //   expect(runs).toEqual(2)
+    //   expect(foo.y).toEqual(3)
+    //   expect(runs).toEqual(2)
+    // })
 
-    fit('class decorator with inheritance', () => {
-      let runs = 0
+    // fit('class decorator with inheritance', () => {
+    //   let runs = 0
 
-      @reactive
-      class Bar {
-      }
+    //   @reactive
+    //   class Bar {
+    //   }
 
-      @reactive
-      class Foo extends Bar {
-        x = 0
-        get y() {
-          runs++
-          return this.x + 1
-        }
-      }
+    //   @reactive
+    //   class Foo extends Bar {
+    //     x = 0
+    //     get y() {
+    //       runs++
+    //       return this.x + 1
+    //     }
+    //   }
 
-      const foo = new Foo()
-      console.log(foo)
+    //   const foo = new Foo()
+    //   console.log(foo)
 
-      expect(foo.y).toEqual(1)
-      expect(runs).toEqual(1)
-      expect(foo.y).toEqual(1)
-      expect(runs).toEqual(1)
-      foo.x = 2
-      expect(foo.y).toEqual(3)
-      expect(runs).toEqual(2)
-      expect(foo.y).toEqual(3)
-      expect(runs).toEqual(2)
-    })
+    //   expect(foo.y).toEqual(1)
+    //   expect(runs).toEqual(1)
+    //   expect(foo.y).toEqual(1)
+    //   expect(runs).toEqual(1)
+    //   foo.x = 2
+    //   expect(foo.y).toEqual(3)
+    //   expect(runs).toEqual(2)
+    //   expect(foo.y).toEqual(3)
+    //   expect(runs).toEqual(2)
+    // })
 
     it('fn proto', () => {
       let runs = 0
 
-      @s$ class Foo {
+      class Foo {
         x?: number
         y?: number
         @fx read() {
@@ -505,7 +489,7 @@ export function test_Signal() {
         }
       }
 
-      const foo = new Foo()
+      const foo = s$(new Foo())
 
       foo.update()
       expect(runs).toEqual(1)
@@ -515,7 +499,6 @@ export function test_Signal() {
     it('fn prop', () => {
       let runs = 0
 
-      @s$
       class Foo {
         x?: number
         y?: number
@@ -529,7 +512,7 @@ export function test_Signal() {
         }
       }
 
-      const foo = new Foo()
+      const foo = s$(new Foo())
 
       foo.update()
       expect(runs).toEqual(1)
