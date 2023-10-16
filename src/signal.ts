@@ -373,17 +373,16 @@ export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T, init
 export function unwrap<T>(obj: T, init?: unknown): Unwrap<T>
 export function unwrap<T>(obj: T, init?: unknown, init2?: unknown): Unwrap<T> {
   return {
-    [__prop__]:
-      typeof init === 'function'
-        ? {
-          [__unwrap__]: obj,
-          cb: init,
-          init: init2
-        }
-        : {
-          [__unwrap__]: obj,
-          init
-        }
+    [__prop__]: typeof init === 'function'
+      ? {
+        [__unwrap__]: obj,
+        cb: init,
+        init: init2
+      }
+      : {
+        [__unwrap__]: obj,
+        init
+      }
   } as any
 }
 
