@@ -89,7 +89,7 @@ const forbiddenKeys = new Set([
   'constructor',
 ])
 const hidden = { configurable: false, enumerable: false }
-const ctorsProps = new Map<any, any>()
+const ctorsPropDecos = new Map<any, any>()
 
 const s$: {
   <T extends Ctor>(expect_new: T, please_use_new?: any): CtorGuard<T>
@@ -114,12 +114,12 @@ const s$: {
 
   initDepth++
 
-  const ctorProps: any = new Map()
+  const propDeco: any = new Map()
 
   let proto = state.__proto__
   while (proto) {
-    ctorsProps.get(proto)?.forEach((value, key) => {
-      ctorProps.set(key, value)
+    ctorsPropDecos.get(proto)?.forEach((value: any, key: any) => {
+      if (!propDeco.has(key)) propDeco.set(key, value)
     })
     proto = proto.__proto__
   }
@@ -130,7 +130,7 @@ const s$: {
 
     const desc = descs[key]
 
-    const cp = ctorProps?.get(key)
+    const cp = propDeco?.get(key)
     switch (cp) {
       case __fn__:
         desc.value = wrapFn(desc.value)
@@ -314,8 +314,8 @@ export const fn: {
   (t: any, k: string): void
 } = function fnDecorator(t: any, k: string, d?: PropertyDescriptor) {
   if (!d) {
-    let props = ctorsProps.get(t)
-    if (!props) ctorsProps.set(t, props = new Map())
+    let props = ctorsPropDecos.get(t)
+    if (!props) ctorsPropDecos.set(t, props = new Map())
     props.set(k, __fn__)
     return
   }
