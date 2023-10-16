@@ -397,6 +397,7 @@ export function test_Signal() {
   describe('Signal', () => {
     it('class decorator', () => {
       let runs = 0
+
       @reactive
       class Foo {
         x = 0
