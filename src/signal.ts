@@ -289,7 +289,7 @@ export const fn: {
 } = function fnDecorator(t: any, k: string, d?: PropertyDescriptor) {
   if (!d) {
     let props = ctorsProps.get(t)
-    if (!props) ctorsProps.set(t, new Map())
+    if (!props) ctorsProps.set(t, props = new Map())
     props.set(k, __fn__)
     return
   }
