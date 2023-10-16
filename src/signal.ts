@@ -425,7 +425,7 @@ export function test_Signal() {
       expect(b.y).toEqual(1)
     })
 
-    fit('computed mirror can be in props', () => {
+    it('computed mirror can be in props', () => {
       const a = $({
         v: 0,
         get x() { return this.v },
@@ -436,7 +436,7 @@ export function test_Signal() {
       expect(b.y).toEqual(5)
     })
 
-    fit('computed alias mirror can be in props', () => {
+    it('computed alias mirror can be in props', () => {
       const a = $(new class {
         v = 0
         get x() { return this.v }
@@ -448,7 +448,7 @@ export function test_Signal() {
       expect(b.y).toEqual(5)
     })
 
-    fit('computed alias mirror with properties can be in props', () => {
+    it('computed alias mirror with properties can be in props', () => {
       const a1 = $(new class {
         v = 0
         get x() { return this.v }
