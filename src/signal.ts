@@ -375,7 +375,7 @@ export function signal<T extends Ctor>(ctor: Ctor): T {
   return class extends ctor {
     constructor(...args: any[]) {
       super(...args)
-      return s$(this)
+      s$(this)
     }
   } as T
 }
