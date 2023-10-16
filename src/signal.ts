@@ -114,11 +114,20 @@ const s$: {
 
   initDepth++
 
+  const ctorProps: any = ctorsProps.get(state.__proto__)
+
   // define signal accessors for exported object
   for (const key in descs) {
     if (forbiddenKeys.has(key)) continue
 
     const desc = descs[key]
+
+    const cp = ctorProps?.get(key)
+    switch (cp) {
+      case __fn__:
+        desc.value = wrapFn(desc.value)
+        break
+    }
 
     const isPropSignal = isSignal(props[key])
 
