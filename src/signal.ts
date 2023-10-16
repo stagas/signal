@@ -451,7 +451,7 @@ export function test_Signal() {
       expect(foo.y).toEqual(3)
       expect(runs).toEqual(2)
     })
-    fit('fn proto', () => {
+    it('fn proto', () => {
       let runs = 0
 
       @reactive
@@ -475,7 +475,7 @@ export function test_Signal() {
       foo.update()
       expect(runs).toEqual(2)
     })
-    fit('fn prop', () => {
+    it('fn prop', () => {
       let runs = 0
 
       @reactive
