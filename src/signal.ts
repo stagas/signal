@@ -408,7 +408,7 @@ export function reactive<T extends Ctor>(ctor: Ctor): T {
   return class extends ctor {
     constructor(...args: any[]) {
       super(...args)
-      if (new.target === this.constructor) s$(this)
+      if (new.target === this.__proto__.constructor) s$(this)
     }
   } as T
 }
