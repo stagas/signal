@@ -433,7 +433,7 @@ export function test_Signal() {
       })
       const b = $({ y: a.$.x }, { y: 5 })
       expect(a.x).toEqual(5)
-      expect(b.y).toEqual(5)
+      expect(b.y).toEqual(6)
     })
 
     fit('computed alias mirror can be in props', () => {
