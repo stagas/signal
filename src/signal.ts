@@ -89,6 +89,7 @@ const forbiddenKeys = new Set([
   'constructor',
 ])
 const hidden = { configurable: false, enumerable: false }
+const ctorsProps = new WeakMap<any, any>()
 
 const s$: {
   <T extends Ctor>(expect_new: T, please_use_new?: any): CtorGuard<T>
@@ -282,7 +283,16 @@ const s$: {
   return state
 }
 
-export const fn = function fnDecorator(t: any, k: string, d: PropertyDescriptor) {
+export const fn: {
+  (t: any, k: string, d: PropertyDescriptor): PropertyDescriptor
+  (t: any, k: string): void
+} = function fnDecorator(t: any, k: string, d?: PropertyDescriptor) {
+  if (!d) {
+    let props = ctorsProps.get(t)
+    if (!props) ctorsProps.set(t, new Map())
+    props.set(k, __fn__)
+    return
+  }
   const fn = d.value
   d.value = function _fn(...args: any[]) {
     return batch(fn, this, args)
@@ -419,7 +429,7 @@ export function test_Signal() {
       expect(foo.y).toEqual(3)
       expect(runs).toEqual(2)
     })
-    fit('fn', () => {
+    fit('fn proto', () => {
       let runs = 0
 
       @reactive
@@ -431,6 +441,30 @@ export function test_Signal() {
           runs++
         }
         @fn update() {
+          this.x++
+          this.y++
+        }
+      }
+
+      const foo = new Foo()
+
+      foo.update()
+      expect(runs).toEqual(1)
+      foo.update()
+      expect(runs).toEqual(2)
+    })
+    fit('fn prop', () => {
+      let runs = 0
+
+      @reactive
+      class Foo {
+        x?: number
+        y?: number
+        @fx read() {
+          const { x, y } = $.of(this)
+          runs++
+        }
+        @fn update = () => {
           this.x++
           this.y++
         }
