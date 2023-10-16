@@ -371,9 +371,8 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
-export function signal<T extends Ctor>(t: Ctor): T {
-  console.log(t)
-  return class extends t {
+export function signal<T extends Ctor>(ctor: Ctor): T {
+  return class extends ctor {
     constructor(...args: any[]) {
       super(...args)
       return $(this)
