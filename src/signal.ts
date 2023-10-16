@@ -395,7 +395,7 @@ export default $
 export function test_Signal() {
   // @env browser
   describe('Signal', () => {
-    fit('class decorator', () => {
+    it('class decorator', () => {
       let runs = 0
       @signalify
       class Foo {
