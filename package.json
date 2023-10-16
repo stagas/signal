@@ -15,6 +15,6 @@
     "utils": "file:../utils"
   },
   "scripts": {
-    "test": "utr src/index.ts"
+    "test": "utr --bro src/index.ts"
   }
 }
