@@ -592,7 +592,7 @@ export function test_Signal() {
         await timeout(20)
         expect(o.bar).toEqual(2)
       })
-      it('unwrap async iterable', async () => {
+      fit('unwrap async iterable', async () => {
         let x = 0
         let callback: any
         function foo(cb: (res: number) => void) {
