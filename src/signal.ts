@@ -283,6 +283,14 @@ const s$: {
   return state
 }
 
+function wrapFn(fn: any) {
+  const v = function _fn(...args: any[]) {
+    return batch(fn, this, args)
+  }
+  v[__fn__] = true
+  return v
+}
+
 export const fn: {
   (t: any, k: string, d: PropertyDescriptor): PropertyDescriptor
   (t: any, k: string): void
@@ -293,11 +301,7 @@ export const fn: {
     props.set(k, __fn__)
     return
   }
-  const fn = d.value
-  d.value = function _fn(...args: any[]) {
-    return batch(fn, this, args)
-  }
-  d.value[__fn__] = true
+  d.value = wrapFn(fn)
   return d
 }
 
