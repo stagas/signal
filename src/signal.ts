@@ -458,11 +458,6 @@ export function test_Signal() {
 
       @reactive
       class Bar {
-        x = 0
-        get y() {
-          runs++
-          return this.x + 1
-        }
       }
 
       @reactive
