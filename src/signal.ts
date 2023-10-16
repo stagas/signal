@@ -427,6 +427,7 @@ export function test_Signal() {
         x = 0
         y = 0
         @fx read() {
+          const { x, y } = this
           runs++
         }
         update() {
