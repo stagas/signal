@@ -430,7 +430,7 @@ export function test_Signal() {
           const { x, y } = $.of(this)
           runs++
         }
-        @fn update() {
+        update() {
           this.x++
           this.y++
         }
