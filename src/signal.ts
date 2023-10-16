@@ -419,6 +419,27 @@ export function test_Signal() {
       expect(foo.y).toEqual(3)
       expect(runs).toEqual(2)
     })
+    fit('fn', () => {
+      let runs = 0
+
+      @reactive
+      class Foo {
+        x = 0
+        y = 0
+        @fx read() {
+          runs++
+        }
+        @fn update() {
+          this.x++
+          this.y++
+        }
+      }
+
+      const foo = new Foo()
+
+      foo.update()
+      expect(runs).toEqual(1)
+    })
     it('fx', () => {
       const s = $({ x: 0 })
       let runs = 0
