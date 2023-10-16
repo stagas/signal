@@ -89,7 +89,7 @@ const forbiddenKeys = new Set([
   'constructor',
 ])
 const hidden = { configurable: false, enumerable: false }
-const ctorsProps = new WeakMap<any, any>()
+const ctorsProps = new Map<any, any>()
 
 const s$: {
   <T extends Ctor>(expect_new: T, please_use_new?: any): CtorGuard<T>
@@ -114,7 +114,15 @@ const s$: {
 
   initDepth++
 
-  const ctorProps: any = ctorsProps.get(state.__proto__)
+  const ctorProps: any = new Map()
+
+  let proto = state.__proto__
+  while (proto) {
+    ctorsProps.get(proto)?.forEach((value, key) => {
+      ctorProps.set(key, value)
+    })
+    proto = proto.__proto__
+  }
 
   // define signal accessors for exported object
   for (const key in descs) {
