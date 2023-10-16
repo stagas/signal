@@ -96,6 +96,7 @@ const s$: {
   <T extends object>(of: T, p?: Props<T>): $<T>
 } = function struct$(state: any, props?: any): any {
   if (isStruct(state)) return assign(state, props)
+  if (isFunction(state)) return reactive(state as any)
   if (!isObject(state)) throw new Err.InvalidSignalType(typeof state)
 
   const descs = getAllPropertyDescriptors(state)
@@ -454,8 +455,7 @@ export function test_Signal() {
     it('fn proto', () => {
       let runs = 0
 
-      @reactive
-      class Foo {
+      @s$ class Foo {
         x?: number
         y?: number
         @fx read() {
@@ -478,7 +478,7 @@ export function test_Signal() {
     it('fn prop', () => {
       let runs = 0
 
-      @reactive
+      @s$
       class Foo {
         x?: number
         y?: number
