@@ -424,10 +424,10 @@ export function test_Signal() {
 
       @reactive
       class Foo {
-        x = 0
-        y = 0
+        x?: number
+        y?: number
         @fx read() {
-          const { x, y } = this
+          const { x, y } = $.of(this)
           runs++
         }
         @fn update() {
