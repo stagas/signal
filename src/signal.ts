@@ -471,6 +471,7 @@ export function test_Signal() {
       }
 
       const foo = new Foo()
+      console.log(foo)
 
       expect(foo.y).toEqual(1)
       expect(runs).toEqual(1)
