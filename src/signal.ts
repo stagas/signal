@@ -429,7 +429,7 @@ export function test_Signal() {
         @fx read() {
           runs++
         }
-        @fn update() {
+        update() {
           this.x++
           this.y++
         }
