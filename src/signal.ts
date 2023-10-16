@@ -372,6 +372,7 @@ export function from<T extends object>(it: T): T {
 }
 
 export function signal<T extends Ctor>(t: Ctor): T {
+  console.log(t)
   return class extends t {
     constructor(...args: any[]) {
       super(...args)
