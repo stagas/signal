@@ -35,7 +35,6 @@
   "dependencies": {
     "@preact/signals-core": "^1.2.2",
     "sube": "^2.2.1",
-    "util": "file:../util",
     "utils": "file:../utils"
   }
 }

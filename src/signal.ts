@@ -1,5 +1,5 @@
-import { DeepPartial, assign, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject } from 'utils'
-import { Computed, Signal, signal, computed, batch, effect, EffectCleanup, __signal__ } from './signal-core.ts'
+import { DeepPartial, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, ticks, timeout, uniterify } from 'utils'
+import { Computed, untrack, Signal, signal, computed, batch, effect, EffectCleanup, __signal__ } from './signal-core.ts'
 import * as util from './signal-core.ts'
 export * from './signal-core.ts'
 
@@ -20,12 +20,12 @@ type From = {
 }
 
 type Fx = {
-  [__fx__]: true
+  [__fx__]?: true
   (): EffectCleanup | (EffectCleanup | unknown)[] | unknown | void
   dispose?(): void
 }
 
-type Fn = { [__fn__]: true }
+type Unwrap<T> = T extends () => AsyncGenerator<infer U, any, any> ? U | undefined : T extends Promise<infer U> ? U | undefined : T
 
 export type $<T> = {
   [K in keyof T]: T[K]
@@ -39,35 +39,32 @@ export const Err = errs({
   InvalidSignalType: [TypeError],
 })
 
-const __alias__ = Symbol('alias')
+const __prop__ = Symbol('prop')
 const __struct__ = Symbol('struct')
 const __signals__ = Symbol('signals')
 const __effects__ = Symbol('effects')
 const __fx__ = Symbol('fx')
 const __fn__ = Symbol('fn')
-const __from__ = Symbol('from')
+const __unwrap__ = Symbol('unwrap')
 
 function isSignal(v: any): v is Signal {
   return v && v[__signal__]
 }
+function isProp(v: any): v is Signal {
+  return v && v[__prop__]
+}
 function isStruct<T extends object>(v: T): v is $<T> {
   return v && v[__struct__]
-}
-function isAlias(v: any): string | undefined {
-  return v && v[__alias__]
-}
-function isFrom(v: any): From | undefined {
-  return v && v[__from__]
 }
 function isFx(v: any): v is Fx {
   return v && v[__fx__]
 }
-// function isFn(v: any): v is Fn {
-//   return v && v[__fn__]
-// }
+function isUnwrap(v: any): boolean {
+  return v && v[__unwrap__]
+}
 
 export function alias<T, K extends keyof T>(of: T, from: K): T[K] {
-  return { [__alias__]: from } as any
+  return { [__prop__]: from } as any
 }
 
 export function dispose(fx: EffectCleanup): void
@@ -96,171 +93,193 @@ const hidden = { configurable: false, enumerable: false }
 const s$: {
   <T extends Ctor>(expect_new: T, please_use_new?: any): CtorGuard<T>
   <T extends object>(of: T, p?: Props<T>): $<T>
-} = function struct$(values: any, props?: any): any {
-  if (isStruct(values) && !props) return values as any
+} = function struct$(state: any, props?: any): any {
+  if (isStruct(state)) return assign(state, props)
+  if (!isObject(state)) throw new Err.InvalidSignalType(typeof state)
+
+  const descs = getAllPropertyDescriptors(state)
+  const aliases: { fromKey: string, toKey: string }[] = []
+  const signals: Record<string, Signal> = {}
+  const properties: PropertyDescriptorMap = {
+    $: { ...hidden, value: signals },
+    [__struct__]: { ...hidden, value: true },
+    [__signals__]: { ...hidden, value: signals },
+    [__effects__]: { ...hidden, value: new Map() },
+  }
 
   props ??= {}
-
   // we mutate the props object so don't modify original
   props = { ...props }
 
   initDepth++
 
-  // define signal accessors - creates signals for all object props
-  if (isObject(values)) {
-    const aliases: { fromKey: string, toKey: string }[] = []
-    const state = values
-    const signals = {}
-    const descs = getAllPropertyDescriptors(values)
-    const properties: PropertyDescriptorMap = {
-      $: { ...hidden, value: signals },
-      [__struct__]: { ...hidden, value: true },
-      [__signals__]: { ...hidden, value: signals },
-      [__effects__]: { ...hidden, value: new Map() },
-    }
+  // define signal accessors for exported object
+  for (const key in descs) {
+    if (forbiddenKeys.has(key)) continue
 
-    // define signal accessors for exported object
-    for (const key in descs) {
-      if (forbiddenKeys.has(key)) continue
+    const desc = descs[key]
 
-      const desc = descs[key]
+    const isPropSignal = isSignal(props[key])
 
-      // getter turns into computed
-      if (desc.get) {
-        const s: Computed = computed(
-          desc.get,
-          desc.set,
-          state
-        )
-        signals[key] = s
-        properties[key] = {
-          get() {
-            return s.value
-          },
-          set(v) {
-            s.value = v
-          }
+    // getter turns into computed
+    if (desc.get && !isPropSignal) {
+      const s: Computed = computed(
+        desc.get,
+        desc.set,
+        state
+      )
+      signals[key] = s
+      properties[key] = {
+        get() {
+          return s.value
+        },
+        set(v) {
+          s.value = v
         }
       }
-      // regular value creates signal accessor
-      else {
-        let value: unknown = desc.value
-        let from: From
-        let fromKey: string
+    }
+    // regular value creates signal accessor
+    else {
+      let s: Signal
+      let value: unknown = desc.value
 
-        if (from = isFrom(value)) {
-          // const from = value[__from__]
-          const s = signal(void 0)
-          signals[key] = s
-          properties[key] = {
-            get() {
-              return s.value
-            },
-            set(v) {
-              s.value = v
+      if (isProp(props[key])) {
+        value = props[key]
+        delete props[key]
+      }
+      if (isPropSignal) {
+        s = props[key]
+        delete props[key]
+      }
+      else if (value == null) {
+        s = signal(value)
+      }
+      else switch (typeof value) {
+        case 'object':
+          if (value[__prop__]) {
+            const p = value[__prop__] as any
+            if (typeof p === 'string') {
+              aliases.push({ fromKey: p, toKey: key })
+              continue
             }
-          }
-          effects.push({
-            fx: (() => {
-              let off
+            else if ('it' in p) {
+              const from: From = p
 
-              const fxfn = () => {
-                let { it } = from
+              s = signal(void 0)
 
-                for (const p of from.path) {
-                  if (!(p in it)) return
-                  it = it[p]
-                  if (it == null) return
-                }
+              effects.push({
+                fx: (() => {
+                  let off
 
-                off?.()
-                state[__effects__].delete(fxfn)
+                  const fxfn = () => {
+                    let { it } = from
 
-                if (isSignal(it)) {
-                  it.subscribe((value) => {
-                    state[key] = value
-                  })
-                  signals[key].subscribe((value) => {
-                    it.value = value
-                  })
-                }
-                else {
-                  state[key] = it
-                }
+                    for (const p of from.path) {
+                      if (!it[p]) return
+                      it = it[p]
+                      if (it == null) return
+                    }
+
+                    off?.()
+                    state[__effects__].delete(fxfn)
+
+                    if (isSignal(it)) {
+                      it.subscribe((value) => {
+                        state[key] = value
+                      })
+                      signals[key].subscribe((value) => {
+                        it.value = value
+                      })
+                    }
+                    else {
+                      state[key] = it
+                    }
+                  }
+
+                  off = fx(fxfn)
+                  state[__effects__].set(fxfn, off)
+                }) as any,
+                state
+              })
+            }
+            else if (__unwrap__ in p) {
+              s = signal(p.init)
+
+              let gen = p[__unwrap__]
+
+              if (gen[Symbol.asyncIterator]) {
+                gen = uniterify(gen, p.cb)
               }
 
-              off = fx(fxfn)
-              state[__effects__].set(fxfn, off)
-            }) as any,
-            state
-          })
-        }
-        else if (fromKey = isAlias(value)) {
-          aliases.push({ fromKey, toKey: key })
-        }
-        else {
-          // TODO: function in props?
-
-          // functions stay the same
-          if (isFunction(value)) {
-            // except for effect functions which are non-enumerable
-            // and scheduled to be initialized at the end of the construct
-            if (isFx(value)) {
-              assign(desc, hidden)
-              properties[key] = desc
-              effects.push({ fx: state[key], state })
+              if (gen.constructor.name === 'AsyncGeneratorFunction') {
+                effects.push({
+                  fx: () => {
+                    const deferred = callbackify(gen, v => {
+                      s.value = v
+                    })
+                    return deferred.reject
+                  },
+                  state
+                })
+              }
             }
+          }
+          else if (__signal__ in value) {
+            s = value as Signal
           }
           else {
-            let s: Signal
-            if (isSignal(props[key])) {
-              s = props[key]
-              delete props[key]
-            }
-            else if (isSignal(value)) {
-              s = value
-            }
-            else {
-              s = signal(value)
-            }
-            signals[key] = s
-            properties[key] = {
-              get() {
-                return s.value
-              },
-              set(v) {
-                s.value = v
-              }
-            }
+            s = signal(value)
           }
+
+          break
+
+        case 'function':
+          // except for effect functions which are non-enumerable
+          // and scheduled to be initialized at the end of the construct
+          if (isFx(value)) {
+            assign(desc, hidden)
+            properties[key] = desc
+            effects.push({ fx: state[key], state })
+          }
+          continue
+
+        default:
+          s = signal(value)
+          break
+      }
+
+      signals[key] = s
+      properties[key] = {
+        get() {
+          return s.value
+        },
+        set(v) {
+          s.value = v
         }
       }
     }
+  }
 
-    Object.defineProperties(state, properties)
+  Object.defineProperties(state, properties)
 
-    aliases.forEach(({ fromKey, toKey }) => {
-      const desc = getPropertyDescriptor(state, fromKey)
-      if (!desc) {
-        throw new Error(`Alias target "${toKey}" failed, couldn\'t find property descriptor for source key "${fromKey}".`)
-      }
-      Object.defineProperty(state, toKey, desc)
-      signals[toKey] = signals[fromKey]
-    })
-
-    deepMerge(state, props)
-
-    if (!--initDepth) {
-      effects.splice(0).forEach(({ fx, state }) =>
-        fx.call(state)
-      )
+  aliases.forEach(({ fromKey, toKey }) => {
+    const desc = getPropertyDescriptor(state, fromKey)
+    if (!desc) {
+      throw new Error(`Alias target "${toKey}" failed, couldn\'t find property descriptor for source key "${fromKey}".`)
     }
+    Object.defineProperty(state, toKey, desc)
+    signals[toKey] = signals[fromKey]
+  })
 
-    return state
+  deepMerge(state, props)
+
+  if (!--initDepth) {
+    effects.splice(0).forEach(({ fx, state }) =>
+      fx.call(state)
+    )
   }
-  else {
-    throw new Err.InvalidSignalType(typeof values)
-  }
+
+  return state
 }
 
 export const fn = function fnDecorator(t: any, k: string, d: PropertyDescriptor) {
@@ -292,13 +311,58 @@ export const fx: {
   return d
 }
 
+export const init: {
+  (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
+} = function initDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
+  const fn = d.value
+  d.value = function _fx() {
+    if (this[__effects__].has(_fx)) {
+      throw new Error('Effect cannot be invoked more than once.')
+    }
+    const dispose = effect(function _init() {
+      untrack()
+      fn.call(this)
+    }, this)
+    this[__effects__].set(_fx, dispose)
+    return dispose
+  }
+  d.value[__fx__] = true
+  return d
+}
+
+// export const unwrap: {
+//   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
+// } = function unwrapDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
+//   d.value[__unwrap__] = true
+//   return d
+// }
+
+export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T, init?: unknown): T | undefined
+export function unwrap<T>(obj: T, init?: unknown): Unwrap<T>
+export function unwrap<T>(obj: T, init?: unknown, init2?: unknown): Unwrap<T> {
+  return {
+    [__prop__]:
+      typeof init === 'function'
+        ? {
+          [__unwrap__]: obj,
+          cb: init,
+          init: init2
+        }
+        : {
+          [__unwrap__]: obj,
+          init
+        }
+  } as any
+}
+
 export function from<T extends object>(it: T): T {
   const path: string[] = []
   const proxy = new Proxy(it, {
     get(target: any, key: string | symbol) {
-      if (key === __from__) return { it, path }
+      if (key === __prop__ || key === Symbol.toPrimitive) return { it, path }
+      if (key === __signal__) return
       if (typeof key === 'symbol') {
-        throw new Error('Attempt to access unknown symbol in "from".')
+        throw new Error('Attempt to access unknown symbol in "from": ' + key.toString())
       }
       path.push(key)
       return proxy
@@ -311,8 +375,10 @@ export const $ = Object.assign(s$, {
   dispose,
   fn,
   fx,
+  init,
   alias,
   from,
+  unwrap,
 }, util)
 
 export default $
@@ -357,6 +423,49 @@ export function test_Signal() {
       a.x = 1
       expect(a.x).toEqual(1)
       expect(b.y).toEqual(1)
+    })
+
+    fit('computed mirror can be in props', () => {
+      const a = $({
+        v: 0,
+        get x() { return this.v },
+        set x(v) { this.v = v },
+      })
+      const b = $({ y: a.$.x }, { y: 5 })
+      expect(a.x).toEqual(5)
+      expect(b.y).toEqual(5)
+    })
+
+    fit('computed alias mirror can be in props', () => {
+      const a = $(new class {
+        v = 0
+        get x() { return this.v }
+        set x(v) { this.v = v }
+        z = alias(this, 'x')
+      })
+      const b = $({ y: a.$.z }, { y: 5 })
+      expect(a.x).toEqual(5)
+      expect(b.y).toEqual(5)
+    })
+
+    fit('computed alias mirror with properties can be in props', () => {
+      const a1 = $(new class {
+        v = 0
+        get x() { return this.v }
+        set x(v) { this.v = v }
+        z = alias(this, 'x')
+
+      })
+      const a2 = $(new class {
+        v = 0
+        get x() { return this.v }
+        set x(v) { this.v = v }
+        z = alias(this, 'x')
+      }, { x: a1.$.x })
+      const b = $({ y: a1.$.z }, { y: 5 })
+      expect(a1.x).toEqual(5)
+      expect(a2.x).toEqual(5)
+      expect(b.y).toEqual(5)
     })
 
     it('mirror alias in another struct', () => {
@@ -463,6 +572,63 @@ export function test_Signal() {
         expect(out).toEqual('accdefa')
         b.x = 3
         expect(out).toEqual('accdefaab')
+      })
+    })
+
+    describe('generator signal', () => {
+      it('unwrap async generator', async () => {
+        let x = 0
+        class Foo {
+          bar = unwrap(async function* () {
+            yield ++x
+            await timeout(10)
+            yield ++x
+          })
+        }
+        const o = $(new Foo)
+        expect(o.bar).toBeUndefined()
+        await ticks(2)
+        expect(o.bar).toEqual(1)
+        await timeout(20)
+        expect(o.bar).toEqual(2)
+      })
+      it('unwrap async iterable', async () => {
+        let x = 0
+        let callback: any
+        function foo(cb: (res: number) => void) {
+          callback = cb
+        }
+        class Foo {
+          bar = unwrap(async function* bars() {
+            for await (const n of iterify(foo)) {
+              yield n
+            }
+          })
+        }
+        const o = $(new Foo)
+        expect(o.bar).toBeUndefined()
+        callback(++x)
+        await ticks(2)
+        expect(o.bar).toEqual(1)
+        callback(++x)
+        await ticks(1)
+        expect(o.bar).toEqual(1)
+      })
+      it('unwrap async generator with init', async () => {
+        let x = 0
+        class Foo {
+          bar = unwrap(async function* () {
+            yield ++x
+            await timeout(10)
+            yield ++x
+          }, ++x)
+        }
+        const o = $(new Foo)
+        expect(o.bar).toEqual(1)
+        await ticks(2)
+        expect(o.bar).toEqual(2)
+        await timeout(20)
+        expect(o.bar).toEqual(3)
       })
     })
   })

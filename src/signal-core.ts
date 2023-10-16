@@ -274,6 +274,8 @@ export declare class Signal<T = any> {
   get(): T;
   set(value: T): void
 
+  [__signal__]: true
+
   get value(): T;
   set value(value: T);
 }
@@ -854,9 +856,9 @@ export function effect(c: () => unknown | EffectCleanup, thisArg?: any): () => v
   }
 }
 
-export function ignore<T>(c: () => T): T
-export function ignore(): void
-export function ignore(callback?: () => any) {
+export function untrack<T>(c: () => T): T
+export function untrack(): void
+export function untrack(callback?: () => any) {
   if (callback) return untracked(callback)
   ignored.push(evalContext)
   evalContext = undefined
