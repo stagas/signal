@@ -440,6 +440,8 @@ export function test_Signal() {
 
       foo.update()
       expect(runs).toEqual(1)
+      foo.update()
+      expect(runs).toEqual(2)
     })
     it('fx', () => {
       const s = $({ x: 0 })
