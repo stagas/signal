@@ -371,11 +371,11 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
-export function signal<T extends Ctor>(ctor: Ctor): T {
+export function signalify<T extends Ctor>(ctor: Ctor): T {
   return class extends ctor {
     constructor(...args: any[]) {
       super(...args)
-      // s$(this)
+      s$(this)
     }
   } as T
 }
@@ -397,7 +397,7 @@ export function test_Signal() {
   describe('Signal', () => {
     fit('class decorator', () => {
       let runs = 0
-      @signal
+      @signalify
       class Foo {
         x = 0
         get y() {
