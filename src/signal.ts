@@ -133,8 +133,8 @@ const s$: {
     const cp = ctorProps?.get(key)
     switch (cp) {
       case __fn__:
-        console.log('YEAH')
         desc.value = wrapFn(desc.value)
+        properties[key] = desc
         break
     }
 
