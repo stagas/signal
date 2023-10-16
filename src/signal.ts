@@ -371,9 +371,13 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
-export function signal(t) {
-  console.log(t)
-  return t
+export function signal(t: any) {
+  return class extends t {
+    constructor(...args: any[]) {
+      super(...args)
+      return $(this)
+    }
+  }
 }
 
 export const $ = Object.assign(s$, {
