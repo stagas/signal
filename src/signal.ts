@@ -406,7 +406,9 @@ export function test_Signal() {
           return this.x + 1
         }
       }
+
       const foo = new Foo()
+
       expect(foo.y).toEqual(1)
       expect(runs).toEqual(1)
       expect(foo.y).toEqual(1)
