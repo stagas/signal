@@ -396,6 +396,7 @@ export function test_Signal() {
       class Foo {
 
       }
+      console.log(new Foo)
     })
     it('fx', () => {
       const s = $({ x: 0 })
