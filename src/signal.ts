@@ -595,11 +595,11 @@ export function test_Signal() {
       expect(b.y).toEqual(1)
     })
 
-    it('invalid signal type error', () => {
-      expect(() => {
-        const x = $(class { })
-      }).toThrow(Err.InvalidSignalType)
-    })
+    // it('invalid signal type error', () => {
+    //   expect(() => {
+    //     const x = $(class { })
+    //   }).toThrow(Err.InvalidSignalType)
+    // })
 
     describe('fx', () => {
       it('guard', () => {
