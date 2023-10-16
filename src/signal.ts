@@ -405,13 +405,10 @@ export function from<T extends object>(it: T): T {
 }
 
 export function reactive<T extends Ctor>(ctor: Ctor): T {
-  const newctor = class extends ctor {
-    constructor(...args: any[]) {
-      super(...args)
-      if (new.target === newctor) s$(this)
-    }
-  } as T
-  return newctor
+  const newctor = function (...args: any[]) {
+    return s$(new ctor(...args))
+  }
+  return newctor as unknown as T
 }
 
 export const $ = Object.assign(s$, {
