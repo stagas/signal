@@ -478,7 +478,7 @@ export function test_Signal() {
     fit('fn prop', () => {
       let runs = 0
 
-      @reactive
+      @$
       class Foo {
         x?: number
         y?: number
