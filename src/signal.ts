@@ -405,7 +405,7 @@ export function from<T extends object>(it: T): T {
 }
 
 export function reactive<T extends Ctor>(ctor: Ctor): T {
-  const newctor = class extends ctor {
+  const newctor = class Ctor extends ctor {
     constructor(...args: any[]) {
       super(...args)
       if (new.target === newctor) s$(this)
