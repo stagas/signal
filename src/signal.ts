@@ -410,6 +410,11 @@ export function test_Signal() {
       expect(runs).toEqual(1)
       expect(foo.y).toEqual(1)
       expect(runs).toEqual(1)
+      foo.x = 2
+      expect(foo.y).toEqual(3)
+      expect(runs).toEqual(2)
+      expect(foo.y).toEqual(3)
+      expect(runs).toEqual(2)
     })
     it('fx', () => {
       const s = $({ x: 0 })
