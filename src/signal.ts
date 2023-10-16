@@ -301,7 +301,7 @@ export const fn: {
     props.set(k, __fn__)
     return
   }
-  d.value = wrapFn(fn)
+  d.value = wrapFn(d.value)
   return d
 }
 
