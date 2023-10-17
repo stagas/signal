@@ -558,6 +558,7 @@ Object.defineProperty(Computed.prototype, 'value', {
 });
 
 Computed.prototype.get = function () {
+  console.log('RETURN', this._value)
   if (this._flags & RUNNING) {
     cycleDetected();
   }
@@ -569,7 +570,6 @@ Computed.prototype.get = function () {
   if (this._flags & HAS_ERROR) {
     throw this._value;
   }
-  console.log('RETURN', this._value)
   return this._value;
 }
 
