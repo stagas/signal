@@ -19,8 +19,9 @@ const TRACKING = 1 << 5;
 
 let pos: any
 
-const EFFECT = 1
-const BATCH = 2
+const EFFECT = 1 << 0
+const BATCH = 1 << 1
+const COMPUTED = 1 << 2
 
 const ignored = []
 
@@ -605,9 +606,11 @@ Computed.prototype._refresh = function () {
   }
 
   const prevContext = evalContext;
+  const prevPos = pos
   try {
     prepareSources(this);
     evalContext = this;
+    pos = COMPUTED
     const value = this._compute.call(this._thisArg);
     if (
       this._flags & HAS_ERROR ||
@@ -623,6 +626,9 @@ Computed.prototype._refresh = function () {
     this._value = err;
     this._flags |= HAS_ERROR;
     this._version++;
+  }
+  finally {
+    pos = prevPos
   }
   evalContext = prevContext;
   cleanupSources(this);
