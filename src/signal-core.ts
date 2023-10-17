@@ -573,7 +573,6 @@ Computed.prototype.get = function () {
 }
 
 Computed.prototype.set = function (v) {
-  console.log('SET', v)
   this._setter?.call(this._thisArg, v)
 }
 
@@ -621,6 +620,7 @@ Computed.prototype._refresh = function () {
     }
   }
   catch (err) {
+    console.error(err)
     this._value = err;
     this._flags |= HAS_ERROR;
     this._version++;
