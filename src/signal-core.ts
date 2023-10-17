@@ -558,7 +558,6 @@ Object.defineProperty(Computed.prototype, 'value', {
 });
 
 Computed.prototype.get = function () {
-  console.log('RETURN', this._value)
   if (this._flags & RUNNING) {
     cycleDetected();
   }
