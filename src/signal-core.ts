@@ -566,10 +566,10 @@ Computed.prototype.get = function () {
   if (node !== undefined) {
     node._version = this._version;
   }
-  console.log(this._flags & HAS_ERROR, this._value)
   if (this._flags & HAS_ERROR) {
     throw this._value;
   }
+  console.log('RETURN', this._value)
   return this._value;
 }
 
