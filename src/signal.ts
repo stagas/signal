@@ -418,7 +418,7 @@ export const $ = Object.assign(s$, {
 
 export default $
 
-export function test_Signal() {
+export function test_signal() {
   // @env browser
   describe('Signal', () => {
     // it('class decorator', () => {
