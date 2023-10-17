@@ -609,7 +609,6 @@ Computed.prototype._refresh = function () {
     prepareSources(this);
     evalContext = this;
     const value = this._compute.call(this._thisArg);
-    console.log('COMPUTED', value, this._thisArg)
     if (
       this._flags & HAS_ERROR ||
       this._value !== value ||
