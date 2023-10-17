@@ -373,7 +373,8 @@ export const init: {
 //   return d
 // }
 
-export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T, init?: unknown): T | undefined
+export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T, init: T): T
+export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T): T | undefined
 export function unwrap<T>(obj: T, init?: unknown): Unwrap<T>
 export function unwrap<T>(obj: T, init?: unknown, init2?: unknown): Unwrap<T> {
   return {
