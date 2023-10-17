@@ -1,4 +1,4 @@
-import { MissingDependencyErrorSymbol, required, requiredFast, NonNull } from 'utils'
+import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast } from 'utils'
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -873,5 +873,14 @@ export function of<T extends object>(of: T): NonNull<T> {
   }
   else {
     return required(of)
+  }
+}
+
+export function when<T extends object>(of: T): NonNull<T> {
+  if (pos === EFFECT && evalContext) {
+    return requiredTruthyFast(of)
+  }
+  else {
+    throw new Error('Not implemented yet: "when" outside of effect.')
   }
 }
