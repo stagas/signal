@@ -534,7 +534,7 @@ export function test_signal() {
       expect(runs).toEqual(2)
       expect(res).toEqual([0, 1])
     })
-    fit('underscored props are passthrough', () => {
+    it('underscored props are passthrough', () => {
       const s = $({ x: 0, _y: 0 })
       let runs = 0
       const res: any[] = []
