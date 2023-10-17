@@ -879,7 +879,6 @@ export function of<T extends object>(of: T): NonNull<T> {
     return requiredFast(of)
   }
   else {
-    console.warn(pos, pos === EFFECT)
     return required(of)
   }
 }
