@@ -534,6 +534,24 @@ export function test_Signal() {
       expect(runs).toEqual(2)
       expect(res).toEqual([0, 1])
     })
+    fit('underscored props are passthrough', () => {
+      const s = $({ x: 0, _y: 0 })
+      let runs = 0
+      const res: any[] = []
+      fx(() => {
+        runs++
+        res.push(s.x, s._y)
+      })
+      s.x = 1
+      expect(runs).toEqual(2)
+      expect(res).toEqual([0, 0, 1, 0])
+      s._y = 2
+      expect(runs).toEqual(2)
+      expect(res).toEqual([0, 0, 1, 0])
+      s.x = 3
+      expect(runs).toEqual(3)
+      expect(res).toEqual([0, 0, 1, 0, 3, 2])
+    })
 
     it('mirror signals in another struct', () => {
       const a = $({ x: 0 })
