@@ -126,7 +126,7 @@ const s$: {
 
   // define signal accessors for exported object
   for (const key in descs) {
-    if (forbiddenKeys.has(key)) continue
+    if (key[0] === '_' || forbiddenKeys.has(key)) continue
 
     const desc = descs[key]
 
