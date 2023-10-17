@@ -573,6 +573,7 @@ Computed.prototype.get = function () {
 }
 
 Computed.prototype.set = function (v) {
+  console.log('SET', v)
   this._setter?.call(this._thisArg, v)
 }
 
