@@ -227,7 +227,7 @@ const s$: {
               let gen = p[__unwrap__]
 
               if (gen[Symbol.asyncIterator]) {
-                gen = uniterify(gen, p.cb)
+                gen = uniterify(gen, fn(p.cb))
               }
 
               if (gen.constructor.name === 'AsyncGeneratorFunction') {
