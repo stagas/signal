@@ -743,6 +743,7 @@ function disposeEffect(effect: Effect) {
 function endEffect(this: Effect, prevContext?: Computed | Effect) {
   if (evalContext !== this) {
     evalContext = ignored.pop();
+    console.log(evalContext)
     if (evalContext !== this) {
       throw new Error("Out-of-order effect");
     }
