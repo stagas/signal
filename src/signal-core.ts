@@ -609,6 +609,7 @@ Computed.prototype._refresh = function () {
     prepareSources(this);
     evalContext = this;
     const value = this._compute.call(this._thisArg);
+    console.log('COMPUTED', value)
     if (
       this._flags & HAS_ERROR ||
       this._value !== value ||
@@ -620,7 +621,6 @@ Computed.prototype._refresh = function () {
     }
   }
   catch (err) {
-    console.error(err)
     this._value = err;
     this._flags |= HAS_ERROR;
     this._version++;
