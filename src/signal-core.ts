@@ -868,7 +868,7 @@ export function untrack(callback?: () => any) {
 export const flush = endBatch.bind(null, true)
 
 export function of<T extends object>(of: T): NonNull<T> {
-  console.log(pos)
+  console.warn(pos)
   if (pos === EFFECT && evalContext) {
     return requiredFast(of)
   }
