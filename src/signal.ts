@@ -150,9 +150,11 @@ const s$: {
       signals[key] = s
       properties[key] = {
         get() {
+          console.log('GETTTT', s.value)
           return s.value
         },
         set(v) {
+          console.log('SETTTT', v)
           s.value = v
         }
       }

@@ -321,7 +321,6 @@ Signal.prototype.set = function (value) {
       cycleDetected();
     }
 
-    console.log('SETTING', value)
     this._value = value;
     this._version++;
     globalVersion++;
