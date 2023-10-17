@@ -394,7 +394,7 @@ export function unwrap<T>(obj: T, init?: unknown, init2?: unknown): Unwrap<T> {
 export function from<T extends object>(it: T): T {
   const path: string[] = []
   const proxy = new Proxy(it, {
-    get(target: any, key: string | symbol) {
+    get(_: any, key: string | symbol) {
       if (key === __prop__ || key === Symbol.toPrimitive) return { it, path }
       if (key === __signal__) return
       if (typeof key === 'symbol') {
