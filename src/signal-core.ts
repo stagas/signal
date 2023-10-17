@@ -1,4 +1,4 @@
-import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast } from 'utils'
+import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, NonTruthyDependencyErrorSymbol } from 'utils'
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -795,7 +795,8 @@ Effect.prototype._callback = function () {
     }
   }
   catch (e) {
-    if (e === MissingDependencyErrorSymbol) { }
+    if (e === MissingDependencyErrorSymbol
+      || e === NonTruthyDependencyErrorSymbol) { }
     else throw e
   }
   finally {
