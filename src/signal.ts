@@ -1,4 +1,4 @@
-import { DeepPartial, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, ticks, timeout, uniterify } from 'utils'
+import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, ticks, timeout, uniterify } from 'utils'
 import { Computed, untrack, Signal, signal, computed, batch, effect, EffectCleanup, __signal__ } from './signal-core.ts'
 import * as util from './signal-core.ts'
 export * from './signal-core.ts'
@@ -46,6 +46,7 @@ const __effects__ = Symbol('effects')
 const __fx__ = Symbol('fx')
 const __fn__ = Symbol('fn')
 const __unwrap__ = Symbol('unwrap')
+const __nulls__ = Symbol('nulls')
 
 function isSignal(v: any): v is Signal {
   return v && v[__signal__]
@@ -142,6 +143,18 @@ const s$: {
 
     // getter turns into computed
     if (desc.get && !isPropSignal) {
+      if (desc.get[__nulls__]) {
+        const get = desc.get
+        desc.get = function() {
+          try {
+            return get.call(this)
+          }
+          catch (e) {
+            if (e === MissingDependencyErrorSymbol) {}
+            else throw e
+          }
+        }
+      }
       const s: Computed = computed(
         desc.get,
         desc.set,
@@ -366,8 +379,10 @@ export const init: {
   return d
 }
 
-export const nullable = function(t, k, d) {
-  console.log(t, k ,d)
+export const nulls: {
+  (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
+} = function nullableDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
+  d.get[__nulls__] = true
 }
 
 // export const unwrap: {
@@ -577,17 +592,17 @@ export function test_signal() {
       let runs = 0
       let x = 0
       class Foo {
-        y = 0
-        @nullable get x() {
+        y?: number
+        @nulls get x() {
           return ++x + this.y
         }
       }
       const foo = s$(new Foo())
-      expect(foo.x).toEqual(1)
-      expect(foo.x).toEqual(1)
+      expect(foo.x).toBeUndefined()
+      expect(foo.x).toBeUndefined()
       foo.y = 1
-      expect(foo.x).toEqual(3)
-      expect(foo.x).toEqual(3)
+      expect(foo.x).toEqual(2)
+      expect(foo.x).toEqual(2)
     })
     it('mirror signals in another struct', () => {
       const a = $({ x: 0 })
