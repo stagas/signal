@@ -273,7 +273,7 @@ const s$: {
           return s.value
         },
         set(v) {
-          console.log('SET', key, v)
+          console.warn('SET', key, v)
           s.value = v
         }
       }
