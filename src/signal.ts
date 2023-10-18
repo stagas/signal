@@ -126,6 +126,7 @@ const s$: {
     const args = [...(propsOrArgs ?? [])]
     // @ts-expect-error
     state = new state(...args)
+    console.log('yea')
   }
 
   const propDeco: any = new Map()
