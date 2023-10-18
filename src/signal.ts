@@ -1,5 +1,5 @@
 import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, required, ticks, timeout, uniterify } from 'utils'
-import { Computed, EffectCleanup, Fx, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, initEffects, of, signal, untrack, when } from './signal-core.ts'
+import { Computed, EffectCleanup, Fx, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when } from './signal-core.ts'
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
 
@@ -438,6 +438,7 @@ export const $ = Object.assign(s$, {
   untrack,
   of,
   when,
+  flush,
 })
 
 export default $
