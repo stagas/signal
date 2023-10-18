@@ -440,6 +440,7 @@ export const $ = Object.assign(s$, {
   of,
   when,
   flush,
+  batchDepth,
 })
 
 export default $
