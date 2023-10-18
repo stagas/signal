@@ -366,6 +366,10 @@ export const init: {
   return d
 }
 
+export const nullable = function(t, k, d) {
+  console.log(t, k ,d)
+}
+
 // export const unwrap: {
 //   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
 // } = function unwrapDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
@@ -559,6 +563,22 @@ export function test_signal() {
       class Foo {
         y = 0
         get x() {
+          return ++x + this.y
+        }
+      }
+      const foo = s$(new Foo())
+      expect(foo.x).toEqual(1)
+      expect(foo.x).toEqual(1)
+      foo.y = 1
+      expect(foo.x).toEqual(3)
+      expect(foo.x).toEqual(3)
+    })
+    fit('nullable getter', () => {
+      let runs = 0
+      let x = 0
+      class Foo {
+        y = 0
+        @nullable get x() {
           return ++x + this.y
         }
       }
