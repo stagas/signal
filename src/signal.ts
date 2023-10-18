@@ -553,7 +553,19 @@ export function test_signal() {
       expect(runs).toEqual(3)
       expect(res).toEqual([0, 0, 1, 0, 3, 2])
     })
+    fit('getter', () => {
+      let runs = 0
+      let x = 0
+      class Foo {
+        get x() {
+          return ++x
+        }
+      }
 
+      const foo = s$(new Foo())
+      expect(foo.x).toEqual(1)
+      expect(foo.x).toEqual(1)
+    })
     it('mirror signals in another struct', () => {
       const a = $({ x: 0 })
       const b = $({ y: a.$.x })
