@@ -110,6 +110,7 @@ export function batch<T>(callback: () => T, thisArg?: any, args?: any[]): T {
       return callback.apply(thisArg, args);
     }
     finally {
+      console.groupEnd()
       pos = prevPos
     }
   }
@@ -806,6 +807,7 @@ Effect.prototype._callback = function () {
     else throw e
   }
   finally {
+    console.groupEnd()
     finish();
   }
 };
