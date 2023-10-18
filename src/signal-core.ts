@@ -103,12 +103,12 @@ function endBatch(force?: boolean) {
   }
 }
 
-export function batch<T>(cb: () => T, thisArg?: any, args?: any[]): T {
+export function batch<T>(fn: () => T, thisArg?: any, args?: any[]): T {
   const prevPos = pos
   if (batchDepth > 0) {
     try {
       pos = BATCH
-      return cb.apply(thisArg, args);
+      return fn.apply(thisArg, args);
     }
     finally {
       pos = prevPos
@@ -116,7 +116,7 @@ export function batch<T>(cb: () => T, thisArg?: any, args?: any[]): T {
   }
 	/*@__INLINE__**/ startBatch();
   try {
-    return cb.apply(thisArg, args);
+    return fn.apply(thisArg, args);
   }
   finally {
     pos = prevPos
