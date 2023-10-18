@@ -1,4 +1,4 @@
-import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, ticks, timeout, uniterify } from 'utils'
+import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, required, ticks, timeout, uniterify } from 'utils'
 import { Computed, untrack, Signal, signal, computed, batch, effect, EffectCleanup, __signal__ } from './signal-core.ts'
 import * as util from './signal-core.ts'
 export * from './signal-core.ts'
@@ -436,6 +436,7 @@ export const $ = Object.assign(s$, {
   from,
   unwrap,
   nulls: nu,
+  required,
 }, util)
 
 export default $
