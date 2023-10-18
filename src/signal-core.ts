@@ -871,7 +871,6 @@ export function untrack(callback?: () => any) {
   ignored.push(evalContext)
   evalContext = undefined
 }
-// function untracked<T>(callback: () => T): T {
 
 export const flush = endBatch.bind(null, true)
 
