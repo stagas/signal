@@ -86,7 +86,7 @@ export function dispose(fn: EffectCleanup | (unknown | EffectCleanup)[] | $<unkn
   }
 }
 
-let initDepth = 0
+export let initDepth = 0
 const effects: { fx: Fx, state: any }[] = []
 const forbiddenKeys = new Set([
   '__proto__',
@@ -96,15 +96,12 @@ const hidden = { configurable: false, enumerable: false }
 const ctorsPropDecos = new Map<any, any>()
 
 const s$: {
-  <T extends CtorArgs<any, any>>(a: T, args: T extends CtorArgs<any, infer U> ? U : never, p?: Props<T>): $<InstanceType<T>>
+  // <T extends CtorArgs<any, any>>(a: T, args: T extends CtorArgs<any, infer U> ? U : never, p?: Props<T>): $<InstanceType<T>>
   <T extends object>(a: Ctor<T>, p?: Props<T>): $<T>
   <T extends object>(a: T, p?: Props<T>): $<T>
-} = function struct$(state: any, propsOrArgs?: any, props?: any): any {
-  if (isStruct(state)) return assign(state, propsOrArgs)
-  if (isObject(state)) {
-    props = propsOrArgs
-    // throw new Err.InvalidSignalType(typeof state)
-  }
+} = function struct$(state: any, props?: any): any {
+  if (isStruct(state)) return assign(state, props)
+  if (!isObject(state)) throw new Err.InvalidSignalType(typeof state)
 
   props ??= {}
   // we mutate the props object so don't modify original
@@ -112,11 +109,11 @@ const s$: {
 
   initDepth++
 
-  if (isFunction(state)) {
-    const args = [...(propsOrArgs ?? [])]
-    // @ts-expect-error
-    state = new state(...args)
-  }
+  // if (isFunction(state)) {
+  //   const args = [...(propsOrArgs ?? [])]
+  //   // @ts-expect-error
+  //   state = new state(...args)
+  // }
 
   const descs = getAllPropertyDescriptors(state)
   const aliases: { fromKey: string, toKey: string }[] = []
@@ -532,7 +529,7 @@ export function test_signal() {
         }
       }
 
-      const foo = s$(Foo, [1, '2'])
+      const foo = s$(new Foo(1, '2'))
 
       foo.update()
       expect(runs).toEqual(1)
@@ -549,7 +546,7 @@ export function test_signal() {
         }
       }
       $.batch(() => {
-        const foo = s$(Foo, [1, '2'])
+        const foo = s$(new Foo(1, '2'))
         out.push(runs)
       })
       out.push(runs)
