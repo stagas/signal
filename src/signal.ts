@@ -551,10 +551,10 @@ export function test_signal() {
         y?: number
         @fx read() {
           const { x, y } = $.of(this)
-          console.log($.batchDepth)
           runs++
         }
         @fn update = () => {
+          console.log($.batchDepth)
           this.x++
           this.y++
         }
