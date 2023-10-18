@@ -124,7 +124,8 @@ const s$: {
 
   if (isFunction(state)) {
     const args = [...(propsOrArgs ?? [])]
-    state = new (state(...args))
+    // @ts-ignore
+    state = new state(...args)
   }
 
   const propDeco: any = new Map()
