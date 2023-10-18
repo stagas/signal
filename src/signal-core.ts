@@ -1,5 +1,10 @@
 import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, NonTruthyDependencyErrorSymbol } from 'utils'
-import { __nulls__, callInitEffects } from './signal';
+
+export type Fx = {
+  [__fx__]?: true
+  (): EffectCleanup | (EffectCleanup | unknown)[] | unknown | void
+  dispose?(): void
+}
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -8,7 +13,17 @@ function mutationDetected(): never {
   throw new Error("Computed cannot have side-effects");
 }
 
-export const __signal__ = Symbol.for('preact-signals')
+export const __signal__ = Symbol('signal')
+export const __fx__ = Symbol('fx')
+export const __nulls__ = Symbol('nulls')
+
+export const initEffects: { fx: Fx, state: any }[] = []
+
+export function callInitEffects() {
+  initEffects.splice(0).forEach(({ fx, state }) =>
+    fx.call(state)
+  )
+}
 
 // Flags for Computed and Effect.
 const RUNNING = 1 << 0;

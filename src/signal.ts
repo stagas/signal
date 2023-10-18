@@ -1,7 +1,5 @@
 import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, required, ticks, timeout, uniterify } from 'utils'
-import { Computed, untrack, Signal, signal, computed, batch, batchDepth, effect, EffectCleanup, __signal__ } from './signal-core.ts'
-import * as util from './signal-core.ts'
-export * from './signal-core.ts'
+import { Computed, EffectCleanup, Fx, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, initEffects, of, signal, untrack } from './signal-core.ts'
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
 
@@ -22,12 +20,6 @@ type From = {
   path: string[]
 }
 
-type Fx = {
-  [__fx__]?: true
-  (): EffectCleanup | (EffectCleanup | unknown)[] | unknown | void
-  dispose?(): void
-}
-
 type Unwrap<T> = T extends () => AsyncGenerator<infer U, any, any> ? U | undefined : T extends Promise<infer U> ? U | undefined : T
 
 export type $<T> = {
@@ -46,10 +38,8 @@ const __prop__ = Symbol('prop')
 const __struct__ = Symbol('struct')
 const __signals__ = Symbol('signals')
 const __effects__ = Symbol('effects')
-const __fx__ = Symbol('fx')
 const __fn__ = Symbol('fn')
 const __unwrap__ = Symbol('unwrap')
-export const __nulls__ = Symbol('nulls')
 
 function isSignal(v: any): v is Signal {
   return v && v[__signal__]
@@ -86,7 +76,6 @@ export function dispose(fn: EffectCleanup | (unknown | EffectCleanup)[] | $<unkn
   }
 }
 
-const initEffects: { fx: Fx, state: any }[] = []
 const forbiddenKeys = new Set([
   '__proto__',
   'constructor',
@@ -321,12 +310,6 @@ const s$: {
   return state
 }
 
-export function callInitEffects() {
-  initEffects.splice(0).forEach(({ fx, state }) =>
-    fx.call(state)
-  )
-}
-
 function wrapFn(fn: any) {
   const v = function _fn(...args: any[]) {
     return batch(fn, this, args)
@@ -449,7 +432,12 @@ export const $ = Object.assign(s$, {
   unwrap,
   nulls: nu,
   required,
-}, util)
+  signal,
+  effect,
+  batch,
+  untrack,
+  of,
+})
 
 export default $
 
