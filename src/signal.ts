@@ -548,9 +548,7 @@ export function test_signal() {
           runs++
         }
       }
-
       $.batch(() => {
-
         const foo = s$(Foo, [1, '2'])
         out.push(runs)
       })
