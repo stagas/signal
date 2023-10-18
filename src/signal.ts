@@ -515,7 +515,7 @@ export function test_signal() {
     //   expect(runs).toEqual(2)
     // })
 
-    fit('fn proto', () => {
+    it('fn proto', () => {
       let runs = 0
 
       class Foo {
@@ -533,7 +533,7 @@ export function test_signal() {
       }
 
       const foo = s$(Foo, [1,'2'])
-console.log(foo)
+
       foo.update()
       expect(runs).toEqual(1)
       foo.update()
