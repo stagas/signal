@@ -554,6 +554,7 @@ export function test_signal() {
           runs++
         }
         @fn update = () => {
+          console.log($.batchDepth)
           this.x++
           this.y++
         }
