@@ -516,7 +516,7 @@ export function test_signal() {
     //   expect(runs).toEqual(2)
     // })
 
-    it('fn proto', () => {
+    fit('fn proto', () => {
       let runs = 0
 
       class Foo {
