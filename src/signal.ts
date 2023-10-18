@@ -579,7 +579,7 @@ export function test_signal() {
       class Foo {
         y = 0
         get x() {
-          return ++x + this.y
+          return $.of(this).y + ++x
         }
       }
       const foo = s$(new Foo())
@@ -595,7 +595,7 @@ export function test_signal() {
       class Foo {
         y?: number
         @nulls get x() {
-          return ++x + $.of(this).y
+          return $.of(this).y + ++x
         }
       }
       const foo = s$(new Foo())
