@@ -435,6 +435,7 @@ export const $ = Object.assign(s$, {
   alias,
   from,
   unwrap,
+  nulls,
 }, util)
 
 export default $
