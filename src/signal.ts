@@ -573,7 +573,7 @@ export function test_signal() {
       expect(runs).toEqual(3)
       expect(res).toEqual([0, 0, 1, 0, 3, 2])
     })
-    fit('getter', () => {
+    it('getter', () => {
       let runs = 0
       let x = 0
       class Foo {
@@ -589,7 +589,7 @@ export function test_signal() {
       expect(foo.x).toEqual(3)
       expect(foo.x).toEqual(3)
     })
-    fit('nulls getter', () => {
+    it('nulls getter', () => {
       let runs = 0
       let x = 0
       class Foo {
