@@ -129,7 +129,6 @@ let evalContext: Computed | Effect | undefined = undefined;
 let untrackedDepth = 0;
 
 export function untracked<T>(callback: () => T): T {
-  console.log('DEPTH', untrackedDepth)
   if (untrackedDepth > 0) {
     return callback();
   }
@@ -137,6 +136,7 @@ export function untracked<T>(callback: () => T): T {
   evalContext = undefined;
   untrackedDepth++;
   try {
+    console.log('DEPTH', untrackedDepth)
     return callback();
   }
   finally {
