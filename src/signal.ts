@@ -534,7 +534,7 @@ export function test_signal() {
       }
 
       const foo = s$(Foo, [1,'2'])
-
+console.log(foo)
       foo.update()
       expect(runs).toEqual(1)
       foo.update()
