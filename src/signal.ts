@@ -306,14 +306,14 @@ const s$: {
 
   deepMerge(state, props)
 
-  if (!--initDepth) {
-    effect(() => {
-      $.untrack()
-      effects.splice(0).forEach(({ fx, state }) =>
-        fx.call(state)
-      )
-    })
-  }
+  // if (!--initDepth) {
+  //   effect(() => {
+  //     $.untrack()
+  //     effects.splice(0).forEach(({ fx, state }) =>
+  //       fx.call(state)
+  //     )
+  //   })
+  // }
 
   return state
 }
