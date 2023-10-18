@@ -147,7 +147,7 @@ export function untracked<T>(callback: () => T): T {
 
 // Effects collected into a batch.
 let batchedEffect: Effect | undefined = undefined;
-let batchDepth = 0;
+export let batchDepth = 0;
 let batchIteration = 0;
 
 // A global version number for signals, used for fast-pathing repeated

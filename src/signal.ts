@@ -1,5 +1,5 @@
 import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, required, ticks, timeout, uniterify } from 'utils'
-import { Computed, untrack, Signal, signal, computed, batch, effect, EffectCleanup, __signal__ } from './signal-core.ts'
+import { Computed, untrack, Signal, signal, computed, batch, batchDepth, effect, EffectCleanup, __signal__ } from './signal-core.ts'
 import * as util from './signal-core.ts'
 export * from './signal-core.ts'
 
@@ -318,7 +318,7 @@ const s$: {
 
   deepMerge(state, props)
 
-  if (!--initDepth) {
+  if (!--initDepth && !batchDepth) {
     callPendingEffects()
   }
 
