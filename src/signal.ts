@@ -553,7 +553,7 @@ export function test_signal() {
           const { x, y } = $.of(this)
           runs++
         }
-        @fn update () {
+        @fn update = () => {
           console.log($.getBatchDepth())
           this.x++
           this.y++
