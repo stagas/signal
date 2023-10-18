@@ -124,7 +124,7 @@ const s$: {
 
   if (isFunction(state)) {
     const args = [...(propsOrArgs ?? [])]
-    // @ts-ignore
+    // @ts-expect-error
     state = new state(...args)
   }
 
