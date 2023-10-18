@@ -552,7 +552,7 @@ export function test_signal() {
           const { x, y } = $.of(this)
           runs++
         }
-        @fn update = () => {
+        update = () => {
           this.x++
           this.y++
         }
