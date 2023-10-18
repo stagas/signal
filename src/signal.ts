@@ -440,7 +440,7 @@ export const $ = Object.assign(s$, {
   of,
   when,
   flush,
-  getBatchDepth() { return batchDepth },
+  // getBatchDepth() { return batchDepth },
 })
 
 export default $
@@ -543,7 +543,7 @@ export function test_signal() {
       out.push(runs)
       expect(out).toEqual([0, 1])
     })
-    fit('fn prop', () => {
+    it('fn prop', () => {
       let runs = 0
 
       class Foo {
@@ -554,7 +554,7 @@ export function test_signal() {
           runs++
         }
         @fn update = () => {
-          console.log($.getBatchDepth())
+          // console.log($.getBatchDepth())
           this.x++
           this.y++
         }
