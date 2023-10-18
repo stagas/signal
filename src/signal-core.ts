@@ -113,7 +113,7 @@ function endBatch(force?: boolean) {
     batchDepth--;
   }
 
-  if (!batchDepth) {
+  if (!batchDepth || force) {
     callInitEffects()
   }
 
