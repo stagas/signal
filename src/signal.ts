@@ -106,16 +106,6 @@ const s$: {
     // throw new Err.InvalidSignalType(typeof state)
   }
 
-  const descs = getAllPropertyDescriptors(state)
-  const aliases: { fromKey: string, toKey: string }[] = []
-  const signals: Record<string, Signal> = {}
-  const properties: PropertyDescriptorMap = {
-    $: { ...hidden, value: signals },
-    [__struct__]: { ...hidden, value: true },
-    [__signals__]: { ...hidden, value: signals },
-    [__effects__]: { ...hidden, value: new Map() },
-  }
-
   props ??= {}
   // we mutate the props object so don't modify original
   props = { ...props }
@@ -129,8 +119,17 @@ const s$: {
     console.log('yea')
   }
 
-  const propDeco: any = new Map()
+  const descs = getAllPropertyDescriptors(state)
+  const aliases: { fromKey: string, toKey: string }[] = []
+  const signals: Record<string, Signal> = {}
+  const properties: PropertyDescriptorMap = {
+    $: { ...hidden, value: signals },
+    [__struct__]: { ...hidden, value: true },
+    [__signals__]: { ...hidden, value: signals },
+    [__effects__]: { ...hidden, value: new Map() },
+  }
 
+  const propDeco: any = new Map()
   let proto = state.__proto__
   while (proto) {
     ctorsPropDecos.get(proto)?.forEach((value: any, key: any) => {
