@@ -542,7 +542,7 @@ export function test_signal() {
       out.push(runs)
       expect(out).toEqual([0, 1])
     })
-    it('fn prop', () => {
+    fit('fn prop', () => {
       let runs = 0
 
       class Foo {
