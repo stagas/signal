@@ -5,12 +5,15 @@ export * from './signal-core.ts'
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
 
-type Ctor = {
-  new(): any
-  new(...args: any[]): any
+type Ctor<T extends object> = {
+  new(): T
 }
 
-type CtorGuard<T> = T extends Ctor ? never : T
+type CtorArgs<T extends object, U extends unknown[]> = {
+  new(...args: U): T
+}
+
+// type CtorGuard<T> = T extends Ctor ? never : T
 
 type Props<T> = DeepPartial<T>
 
@@ -93,11 +96,15 @@ const hidden = { configurable: false, enumerable: false }
 const ctorsPropDecos = new Map<any, any>()
 
 const s$: {
-  <T extends Ctor>(expect_new: T, please_use_new?: any): CtorGuard<T>
+  <T extends CtorArgs<any, any>>(a: T, args: T extends CtorArgs<any, infer U> ? U : never, p?: Props<T>): $<InstanceType<T>>
+  <T extends object>(a: Ctor<T>, p?: Props<T>): $<T>
   <T extends object>(a: T, p?: Props<T>): $<T>
-} = function struct$(state: any, props?: any): any {
-  if (isStruct(state)) return assign(state, props)
-  if (!isObject(state)) throw new Err.InvalidSignalType(typeof state)
+} = function struct$(state: any, propsOrArgs?: any, props?: any): any {
+  if (isStruct(state)) return assign(state, propsOrArgs)
+  if (isObject(state)) {
+    props = propsOrArgs
+    // throw new Err.InvalidSignalType(typeof state)
+  }
 
   const descs = getAllPropertyDescriptors(state)
   const aliases: { fromKey: string, toKey: string }[] = []
@@ -114,6 +121,11 @@ const s$: {
   props = { ...props }
 
   initDepth++
+
+  if (isFunction(state)) {
+    const args = [...(propsOrArgs ?? [])]
+    state = new (state(...args))
+  }
 
   const propDeco: any = new Map()
 
@@ -431,15 +443,6 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
-export function fromFactory<T>(fn: () => T): $<T> {
-  initDepth++
-  const res = $(fn() as any)
-  if (--initDepth) {
-    callPendingEffects()
-  }
-  return res
-}
-
 export const $ = Object.assign(s$, {
   dispose,
   fn,
@@ -450,7 +453,6 @@ export const $ = Object.assign(s$, {
   unwrap,
   nulls: nu,
   required,
-  fromFactory,
 }, util)
 
 export default $
@@ -517,6 +519,7 @@ export function test_signal() {
       let runs = 0
 
       class Foo {
+        constructor(a: number,b:string){}
         x?: number
         y?: number
         @fx read() {
@@ -529,7 +532,7 @@ export function test_signal() {
         }
       }
 
-      const foo = s$(new Foo())
+      const foo = s$(Foo, [1,'2'])
 
       foo.update()
       expect(runs).toEqual(1)
