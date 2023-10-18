@@ -523,7 +523,7 @@ export function test_signal() {
       foo.update()
       expect(runs).toEqual(2)
     })
-    fit('init effects run after batch', () => {
+    it('init effects run after batch', () => {
       let runs = 0
       const out: any[] = []
       class Foo {
