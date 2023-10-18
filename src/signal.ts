@@ -519,7 +519,7 @@ export function test_signal() {
       let runs = 0
 
       class Foo {
-        constructor(a: number,b:string){}
+        constructor(a: number, b: string) { }
         x?: number
         y?: number
         @fx read() {
@@ -532,12 +532,30 @@ export function test_signal() {
         }
       }
 
-      const foo = s$(Foo, [1,'2'])
+      const foo = s$(Foo, [1, '2'])
 
       foo.update()
       expect(runs).toEqual(1)
       foo.update()
       expect(runs).toEqual(2)
+    })
+    fit('init effects run after batch', () => {
+      let runs = 0
+      const out: any[] = []
+      class Foo {
+        constructor(a: number, b: string) { }
+        @fx read() {
+          runs++
+        }
+      }
+
+      $.batch(() => {
+
+        const foo = s$(Foo, [1, '2'])
+        out.push(runs)
+      })
+      out.push(runs)
+      expect(out).toEqual([0, 1])
     })
     it('fn prop', () => {
       let runs = 0
