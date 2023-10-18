@@ -284,7 +284,7 @@ const s$: {
           return s.value
         },
         set(v) {
-          console.log('set', key, v)
+          // console.log('set', key, v)
           s.value = v
         }
       }
