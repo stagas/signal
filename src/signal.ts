@@ -380,7 +380,7 @@ export const init: {
   return d
 }
 
-export const nulls: {
+export const nul: {
   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
 } = function nullableDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
   d.get[__nulls__] = true
@@ -435,7 +435,7 @@ export const $ = Object.assign(s$, {
   alias,
   from,
   unwrap,
-  nulls,
+  nulls: nul,
 }, util)
 
 export default $
@@ -595,7 +595,7 @@ export function test_signal() {
       let x = 0
       class Foo {
         y?: number
-        @nulls get x() {
+        @nul get x() {
           return $.of(this).y + ++x
         }
       }
