@@ -1,5 +1,5 @@
 import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, NonTruthyDependencyErrorSymbol } from 'utils'
-import { __nulls__, callPendingEffects } from './signal';
+import { __nulls__, callInitEffects } from './signal';
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -99,7 +99,7 @@ function endBatch(force?: boolean) {
   }
 
   if (!batchDepth) {
-    callPendingEffects()
+    callInitEffects()
   }
 
   if (hasError) {

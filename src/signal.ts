@@ -86,8 +86,7 @@ export function dispose(fn: EffectCleanup | (unknown | EffectCleanup)[] | $<unkn
   }
 }
 
-export let initDepth = 0
-const effects: { fx: Fx, state: any }[] = []
+const initEffects: { fx: Fx, state: any }[] = []
 const forbiddenKeys = new Set([
   '__proto__',
   'constructor',
@@ -107,7 +106,7 @@ const s$: {
   // we mutate the props object so don't modify original
   props = { ...props }
 
-  initDepth++
+  // initDepth++
 
   // if (isFunction(state)) {
   //   const args = [...(propsOrArgs ?? [])]
@@ -209,7 +208,7 @@ const s$: {
 
               s = signal(void 0)
 
-              effects.push({
+              initEffects.push({
                 fx: (() => {
                   let off
 
@@ -254,7 +253,7 @@ const s$: {
               }
 
               if (gen.constructor.name === 'AsyncGeneratorFunction') {
-                effects.push({
+                initEffects.push({
                   fx: () => {
                     const deferred = callbackify(gen, v => {
                       s.value = v
@@ -281,7 +280,7 @@ const s$: {
           if (isFx(value)) {
             assign(desc, hidden)
             properties[key] = desc
-            effects.push({ fx: state[key], state })
+            initEffects.push({ fx: state[key], state })
           }
           continue
 
@@ -315,15 +314,15 @@ const s$: {
 
   deepMerge(state, props)
 
-  if (!--initDepth && !batchDepth) {
-    callPendingEffects()
+  if (!batchDepth) {
+    callInitEffects()
   }
 
   return state
 }
 
-export function callPendingEffects() {
-  effects.splice(0).forEach(({ fx, state }) =>
+export function callInitEffects() {
+  initEffects.splice(0).forEach(({ fx, state }) =>
     fx.call(state)
   )
 }
