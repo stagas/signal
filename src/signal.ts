@@ -145,12 +145,12 @@ const s$: {
     if (desc.get && !isPropSignal) {
       if (desc.get[__nulls__]) {
         const get = desc.get
-        desc.get = function() {
+        desc.get = function () {
           try {
             return get.call(this)
           }
           catch (e) {
-            if (e === MissingDependencyErrorSymbol) {}
+            if (e === MissingDependencyErrorSymbol) { }
             else throw e
           }
         }
@@ -307,9 +307,12 @@ const s$: {
   deepMerge(state, props)
 
   if (!--initDepth) {
-    effects.splice(0).forEach(({ fx, state }) =>
-      fx.call(state)
-    )
+    effect(() => {
+      $.untrack()
+      effects.splice(0).forEach(({ fx, state }) =>
+        fx.call(state)
+      )
+    })
   }
 
   return state
