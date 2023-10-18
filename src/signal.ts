@@ -46,7 +46,7 @@ const __effects__ = Symbol('effects')
 const __fx__ = Symbol('fx')
 const __fn__ = Symbol('fn')
 const __unwrap__ = Symbol('unwrap')
-const __nulls__ = Symbol('nulls')
+export const __nulls__ = Symbol('nulls')
 
 function isSignal(v: any): v is Signal {
   return v && v[__signal__]
@@ -154,6 +154,7 @@ const s$: {
             else throw e
           }
         }
+        desc.get[__nulls__] = true
       }
       const s: Computed = computed(
         desc.get,
@@ -588,7 +589,7 @@ export function test_signal() {
       expect(foo.x).toEqual(3)
       expect(foo.x).toEqual(3)
     })
-    fit('nullable getter', () => {
+    fit('nulls getter', () => {
       let runs = 0
       let x = 0
       class Foo {

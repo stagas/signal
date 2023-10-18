@@ -1,4 +1,5 @@
 import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, NonTruthyDependencyErrorSymbol } from 'utils'
+import { __nulls__ } from './signal';
 
 function cycleDetected(): never {
   throw new Error("Cycle detected");
@@ -610,7 +611,7 @@ Computed.prototype._refresh = function () {
   try {
     prepareSources(this);
     evalContext = this;
-    pos = COMPUTED
+    pos = this._compute[__nulls__] ? EFFECT : COMPUTED
     const value = this._compute.call(this._thisArg);
     if (
       this._flags & HAS_ERROR ||
