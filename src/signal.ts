@@ -440,7 +440,7 @@ export const $ = Object.assign(s$, {
   of,
   when,
   flush,
-  batchDepth,
+  getBatchDepth() { return batchDepth },
 })
 
 export default $
@@ -554,7 +554,7 @@ export function test_signal() {
           runs++
         }
         @fn update () {
-          console.log($.batchDepth)
+          console.log($.getBatchDepth())
           this.x++
           this.y++
         }
