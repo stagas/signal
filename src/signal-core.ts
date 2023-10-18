@@ -1,4 +1,3 @@
-log.active
 import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, NonTruthyDependencyErrorSymbol } from 'utils'
 
 export type Fx = {
