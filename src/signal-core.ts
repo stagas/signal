@@ -140,7 +140,7 @@ export function untracked<T>(callback: () => T): T {
     return callback();
   }
   finally {
-    console.log('YO EVALCONTEXT', evalContext)
+    console.log('YO EVALCONTEXT', evalContext, prevContext)
     untrackedDepth--;
     evalContext = prevContext;
   }
