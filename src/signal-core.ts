@@ -136,7 +136,7 @@ export function untracked<T>(callback: () => T): T {
   evalContext = undefined;
   untrackedDepth++;
   try {
-    console.log('DEPTH', untrackedDepth)
+    console.log('DEPTH', untrackedDepth, callback.toString())
     return callback();
   }
   finally {
