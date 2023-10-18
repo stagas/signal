@@ -273,6 +273,7 @@ const s$: {
           return s.value
         },
         set(v) {
+          console.log('SET', key, v)
           s.value = v
         }
       }
