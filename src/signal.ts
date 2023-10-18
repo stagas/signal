@@ -557,14 +557,17 @@ export function test_signal() {
       let runs = 0
       let x = 0
       class Foo {
+        y = 0
         get x() {
-          return ++x
+          return ++x + this.y
         }
       }
-
       const foo = s$(new Foo())
       expect(foo.x).toEqual(1)
       expect(foo.x).toEqual(1)
+      foo.y = 1
+      expect(foo.x).toEqual(3)
+      expect(foo.x).toEqual(3)
     })
     it('mirror signals in another struct', () => {
       const a = $({ x: 0 })
