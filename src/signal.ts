@@ -325,7 +325,7 @@ const s$: {
   return state
 }
 
-function callPendingEffects() {
+export function callPendingEffects() {
   effects.splice(0).forEach(({ fx, state }) =>
     fx.call(state)
   )
