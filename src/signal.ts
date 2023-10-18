@@ -306,16 +306,17 @@ const s$: {
 
   deepMerge(state, props)
 
-  // if (!--initDepth) {
-  //   effect(() => {
-  //     $.untrack()
-  //     effects.splice(0).forEach(({ fx, state }) =>
-  //       fx.call(state)
-  //     )
-  //   })
-  // }
+  if (!--initDepth) {
+    callPendingEffects()
+  }
 
   return state
+}
+
+function callPendingEffects() {
+  effects.splice(0).forEach(({ fx, state }) =>
+    fx.call(state)
+  )
 }
 
 function wrapFn(fn: any) {
@@ -430,6 +431,15 @@ export function from<T extends object>(it: T): T {
   return proxy
 }
 
+export function fromFactory<T>(fn: () => T): $<T> {
+  initDepth++
+  const res = $(fn() as any)
+  if (--initDepth) {
+    callPendingEffects()
+  }
+  return res
+}
+
 export const $ = Object.assign(s$, {
   dispose,
   fn,
@@ -440,6 +450,7 @@ export const $ = Object.assign(s$, {
   unwrap,
   nulls: nu,
   required,
+  fromFactory,
 }, util)
 
 export default $
