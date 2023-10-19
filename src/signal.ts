@@ -440,6 +440,7 @@ export const $ = Object.assign(s$, {
   of,
   when,
   flush,
+  _: untrack,
   // getBatchDepth() { return batchDepth },
 })
 
