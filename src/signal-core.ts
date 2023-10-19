@@ -770,6 +770,7 @@ function endEffect(this: Effect, prevContext?: Computed | Effect) {
   if (evalContext !== this) {
     evalContext = ignored.pop();
     if (evalContext !== this) {
+      console.log(this)
       throw new Error("Out-of-order effect");
     }
   }
