@@ -84,10 +84,12 @@ const hidden = { configurable: false, enumerable: false }
 const ctorsPropDecos = new Map<any, any>()
 
 const s$: {
+  (): void
   // <T extends CtorArgs<any, any>>(a: T, args: T extends CtorArgs<any, infer U> ? U : never, p?: Props<T>): $<InstanceType<T>>
   <T extends object>(a: Ctor<T>, p?: Props<T>): $<T>
   <T extends object>(a: T, p?: Props<T>): $<T>
-} = function struct$(state: any, props?: any): any {
+} = function struct$(state?: any, props?: any): any {
+  if (state === void 0) return untrack()
   if (isStruct(state)) return assign(state, props)
   if (!isObject(state)) throw new Err.InvalidSignalType(typeof state)
 
