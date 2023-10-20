@@ -650,6 +650,12 @@ Computed.prototype._refresh = function () {
   finally {
     pos = prevPos
   }
+  if (evalContext !== this) {
+    evalContext = ignored.pop()
+    if (evalContext !== this) {
+      throw new Error("Out-of-order computed");
+    }
+  }
   evalContext = prevContext;
   cleanupSources(this);
   this._flags &= ~RUNNING;
