@@ -742,7 +742,7 @@ export function test_signal() {
       })
 
       it('still allows other errors', () => {
-        const a = $({ foo: null as any})
+        const a = $({ foo: null as any })
         let count = 0
         $.fx(() => {
           count++
@@ -785,7 +785,7 @@ export function test_signal() {
 
       it('outer fx does not error when called from within batch', () => {
         const a = $({ foo: null as any })
-        const b = $({ y: null as any, x:  null as any })
+        const b = $({ y: null as any, x: null as any })
 
         let out = ''
         $.fx(() => {
