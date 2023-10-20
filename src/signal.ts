@@ -47,7 +47,7 @@ function isSignal(v: any): v is Signal {
 function isProp(v: any): v is Signal {
   return v && v[__prop__]
 }
-function isStruct<T extends object>(v: T): v is $<T> {
+function isStruct<T>(v: T): v is $<T> {
   return v && v[__struct__]
 }
 function isFx(v: any): v is Fx {
@@ -61,10 +61,10 @@ export function alias<T, K extends keyof T>(of: T, from: K): T[K] {
   return { [__prop__]: from } as any
 }
 
-export function dispose(fx: EffectCleanup): void
+export function dispose(fx: unknown | EffectCleanup): void
 export function dispose(fxs: (unknown | EffectCleanup)[]): void
 export function dispose($: $<unknown>): void
-export function dispose(fn: EffectCleanup | (unknown | EffectCleanup)[] | $<unknown>): void {
+export function dispose(fn: EffectCleanup | unknown | (unknown | EffectCleanup)[] | $<unknown>): void {
   if (isStruct(fn)) {
     fn[__effects__].forEach(dispose)
   }
@@ -255,6 +255,9 @@ const s$: {
                 })
               }
             }
+            else {
+              throw new TypeError('Unknown signal class prop type.')
+            }
           }
           else if (__signal__ in value) {
             s = value as Signal
@@ -314,7 +317,7 @@ const s$: {
 }
 
 function wrapFn(fn: any) {
-  const v = function _fn(...args: any[]) {
+  const v = function _fn(this: any, ...args: any[]) {
     return batch(fn, this, args)
   }
   v[__fn__] = true
@@ -346,8 +349,8 @@ export const fx: {
   if (isFunction(t)) {
     return effect(t, k)
   }
-  const fn = d.value
-  d.value = function _fx() {
+  const fn = d!.value
+  d!.value = function _fx() {
     if (this[__effects__].has(_fx)) {
       throw new Error('Effect cannot be invoked more than once.')
     }
@@ -355,19 +358,19 @@ export const fx: {
     this[__effects__].set(_fx, dispose)
     return dispose
   }
-  d.value[__fx__] = true
+  d!.value[__fx__] = true
   return d
 }
 
 export const init: {
   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
-} = function initDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
+} = function initDecorator(t: object | (() => unknown), k: string, d: PropertyDescriptor): any {
   const fn = d.value
   d.value = function _fx() {
     if (this[__effects__].has(_fx)) {
       throw new Error('Effect cannot be invoked more than once.')
     }
-    const dispose = effect(function _init() {
+    const dispose = effect(function _init(this: any) {
       untrack()
       fn.call(this)
     }, this)
@@ -380,8 +383,8 @@ export const init: {
 
 export const nu: {
   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
-} = function nullableDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
-  d.get[__nulls__] = true
+} = function nullableDecorator(t: object | (() => unknown), k: string, d: PropertyDescriptor): any {
+  d.get![__nulls__] = true
 }
 
 // export const unwrap: {
@@ -518,8 +521,8 @@ export function test_signal() {
           runs++
         }
         @fn update() {
-          this.x++
-          this.y++
+          this.x!++
+          this.y!++
         }
       }
 
@@ -558,8 +561,8 @@ export function test_signal() {
         }
         @fn update = () => {
           // console.log($.getBatchDepth())
-          this.x++
-          this.y++
+          this.x!++
+          this.y!++
         }
       }
 
@@ -723,8 +726,8 @@ export function test_signal() {
 
     describe('fx', () => {
       it('guard', () => {
-        const a = $({ foo: null })
-        const res = []
+        const a = $({ foo: null as any })
+        const res: any[] = []
         let count = 0
         $.fx(() => {
           count++
@@ -739,7 +742,7 @@ export function test_signal() {
       })
 
       it('still allows other errors', () => {
-        const a = $({ foo: null })
+        const a = $({ foo: null as any})
         let count = 0
         $.fx(() => {
           count++
@@ -762,7 +765,7 @@ export function test_signal() {
       })
 
       it('errors normally inside a batch inside an fx', () => {
-        const a = $({ foo: null })
+        const a = $({ foo: null as any })
         const b = { x: null }
 
         let count = 0
@@ -781,8 +784,8 @@ export function test_signal() {
       })
 
       it('outer fx does not error when called from within batch', () => {
-        const a = $({ foo: null })
-        const b = $({ y: null, x: null })
+        const a = $({ foo: null as any })
+        const b = $({ y: null as any, x:  null as any })
 
         let out = ''
         $.fx(() => {
