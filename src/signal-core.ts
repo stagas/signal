@@ -39,20 +39,21 @@ const EFFECT = 1 << 0
 const BATCH = 1 << 1
 const COMPUTED = 1 << 2
 
-const ignored = []
+type EvalContext = Effect | Computed
+const ignored: (EvalContext | undefined)[] = []
 
 // A linked list node used to track dependencies (sources) and dependents (targets).
 // Also used to remember the source's last version number that the target saw.
 type Node = {
   // A source whose value the target depends on.
   _source: Signal;
-  _prevSource?: Node;
-  _nextSource?: Node;
+  _prevSource?: Node | undefined;
+  _nextSource?: Node | undefined;
 
   // A target that depends on the source and should be notified when the source changes.
   _target: Computed | Effect;
-  _prevTarget?: Node;
-  _nextTarget?: Node;
+  _prevTarget?: Node | undefined;
+  _nextTarget?: Node | undefined;
 
   // The version number of the source that target has last seen. We use version numbers
   // instead of storing the source value, because source values can take arbitrary amount
@@ -62,7 +63,7 @@ type Node = {
 
   // Used to remember & roll back the source's previous `._node` value when entering &
   // exiting a new evaluation context.
-  _rollbackNode?: Node;
+  _rollbackNode?: Node | undefined;
 };
 
 function startBatch() {
@@ -122,7 +123,7 @@ function endBatch(force?: boolean) {
   }
 }
 
-export function batch<T>(fn: () => T, thisArg?: any, args?: any[]): T {
+export function batch<T>(fn: () => T, thisArg?: any, args?: any): T {
   const prevPos = pos
   if (batchDepth > 0) {
     try {
@@ -144,7 +145,7 @@ export function batch<T>(fn: () => T, thisArg?: any, args?: any[]): T {
 }
 
 // Currently evaluated computed or effect.
-let evalContext: Computed | Effect | undefined = undefined;
+let evalContext: EvalContext | undefined = undefined;
 
 let untrackedDepth = 0;
 
@@ -266,10 +267,10 @@ export declare class Signal<T = any> {
   _version: number;
 
   /** @internal */
-  _node?: Node;
+  _node?: Node | undefined;
 
   /** @internal */
-  _targets?: Node;
+  _targets?: Node | undefined;
 
   constructor(value?: T);
 
@@ -543,8 +544,8 @@ function cleanupSources(target: Computed | Effect) {
 
 export declare class Computed<T = any> extends Signal<T> {
   _compute: () => T;
-  _setter: (v: any) => void;
-  _sources?: Node;
+  _setter: ((v: any) => void) | undefined;
+  _sources?: Node | undefined;
   _globalVersion: number;
   _flags: number;
   _thisArg: any
@@ -791,10 +792,10 @@ function endEffect(this: Effect, prevContext?: Computed | Effect) {
 
 export type EffectCleanup = () => unknown;
 declare class Effect {
-  _compute?: () => unknown | EffectCleanup;
-  _cleanup?: () => unknown;
-  _sources?: Node;
-  _nextBatchedEffect?: Effect;
+  _compute?: (() => unknown | EffectCleanup) | undefined;
+  _cleanup?: (() => unknown) | undefined;
+  _sources?: Node | undefined;
+  _nextBatchedEffect?: Effect | undefined;
   _flags: number;
   _thisArg: any
 

@@ -19,11 +19,11 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "useDefineForClassFields": true,
-    // "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
-    // "noImplicitAny": true,
+    "noImplicitAny": false,
     "noErrorTruncation": true,
     // "noImplicitThis": true,
     // "noUncheckedIndexedAccess": true,
@@ -35,7 +35,8 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "allowJs": true,
+    // "strictNullChecks": false,
     // "incremental": true,
-    // "strict": true
+    "strict": true
   }
 }
