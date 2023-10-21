@@ -317,7 +317,8 @@ const s$: {
 }
 
 function mergeExclude(x: any) {
-  return !isObjectLiteral(x)
+  console.log(x, isObjectLiteral(x))
+  return isObjectLiteral(x)
 }
 
 function wrapFn(fn: any) {
