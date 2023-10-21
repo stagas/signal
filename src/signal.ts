@@ -317,6 +317,7 @@ const s$: {
 }
 
 function mergeExclude(x: any) {
+  console.log('YO', x)
   return isSignal(x)
 }
 
