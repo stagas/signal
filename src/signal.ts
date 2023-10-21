@@ -317,7 +317,6 @@ const s$: {
 }
 
 function mergeExclude(x: any) {
-  console.log(x, isObjectLiteral(x))
   return isObjectLiteral(x)
 }
 
