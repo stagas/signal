@@ -307,13 +307,17 @@ const s$: {
     signals[toKey] = signals[fromKey]
   })
 
-  deepMerge(state, props)
+  deepMerge(state, props, Infinity, mergeExclude)
 
   if (!batchDepth) {
     callInitEffects()
   }
 
   return state
+}
+
+function mergeExclude(x: any) {
+  return isSignal(x)
 }
 
 function wrapFn(fn: any) {
