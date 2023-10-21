@@ -1,4 +1,4 @@
-import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, iterify, required, ticks, timeout, uniterify } from 'utils'
+import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
 import { Computed, EffectCleanup, Fx, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when } from './signal-core.ts'
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
@@ -317,8 +317,7 @@ const s$: {
 }
 
 function mergeExclude(x: any) {
-  console.log('YO', x, x.__proto__ === Object.prototype)
-  return isSignal(x)
+  return isObjectLiteral(x)
 }
 
 function wrapFn(fn: any) {
