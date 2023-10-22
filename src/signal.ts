@@ -260,7 +260,7 @@ const s$: {
                 })
               }
               else if (gen.constructor.name === 'AsyncFunction') {
-                conosle.log('YEAY')
+                console.log('YEAY')
               }
               else {
                 throw new Err.InvalidUnwrapType(typeof state, s$)
