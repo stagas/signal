@@ -260,11 +260,10 @@ const s$: {
               }
               else {
                 throw new Err.InvalidUnwrapType(typeof state, s$)
-                // throw new TypeError('Unknown unwrap type.')
               }
             }
             else {
-              throw new TypeError('Unknown signal class prop type.')
+              throw new Err.InvalidSignalClassPropType(typeof state, s$)
             }
           }
           else if (__signal__ in value) {
