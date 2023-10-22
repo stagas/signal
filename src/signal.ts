@@ -260,7 +260,12 @@ const s$: {
                 })
               }
               else if (gen.constructor.name === 'AsyncFunction') {
-                console.log('YEAY')
+                initEffects.push({
+                  fx: async () => {
+                    s.value = await gen()
+                  },
+                  state
+                })
               }
               else {
                 throw new Err.InvalidUnwrapType(typeof state, s$)
