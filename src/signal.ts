@@ -34,6 +34,8 @@ export type $<T> = {
 
 export const Err = errs({
   InvalidSignalType: [TypeError],
+  InvalidSignalClassPropType: [TypeError],
+  InvalidUnwrapType: [TypeError],
 })
 
 const __prop__ = Symbol('prop')
@@ -257,7 +259,8 @@ const s$: {
                 })
               }
               else {
-                throw new TypeError('Unknown unwrap type.')
+                throw new Err.InvalidUnwrapType(typeof state)
+                // throw new TypeError('Unknown unwrap type.')
               }
             }
             else {
