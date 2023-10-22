@@ -261,7 +261,7 @@ const s$: {
               }
               else if (typeof gen === 'function') {
                 initEffects.push({
-                  fx: fx(() => {
+                  fx: () => fx(() => {
                     let aborted = false
                     gen().then((v: any) => {
                       if (aborted) return
