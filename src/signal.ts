@@ -256,6 +256,9 @@ const s$: {
                   state
                 })
               }
+              else {
+                throw new TypeError('Unknown unwrap type.')
+              }
             }
             else {
               throw new TypeError('Unknown signal class prop type.')
