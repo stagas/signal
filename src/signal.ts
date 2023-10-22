@@ -932,6 +932,25 @@ export function test_signal() {
         await ticks(2)
         expect(res).toEqual([42])
       })
+      it('reruns on dep change', async () => {
+        class Foo {
+          x = 1
+          bar = unwrap(() => {
+            return Promise.resolve(this.x * 42)
+          })
+        }
+        let res: number[] = []
+        const foo = $(new Foo)
+        fx(() => {
+          const { bar } = of(foo)
+          res.push(bar)
+        })
+        expect(res).toEqual([])
+        await ticks(2)
+        expect(res).toEqual([42])
+        foo.x = 2
+        expect(res).toEqual([42, 84])
+      })
     })
   })
 }
