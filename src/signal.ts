@@ -259,7 +259,7 @@ const s$: {
                   state
                 })
               }
-              else if (gen.constructor.name === 'AsyncFunction') {
+              else if (typeof gen === 'function') {
                 initEffects.push({
                   fx: async () => {
                     s.value = await gen()
