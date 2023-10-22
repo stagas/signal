@@ -523,7 +523,7 @@ export function test_signal() {
         x?: number
         y?: number
         @fx read() {
-          const { x, y } = $.of(this)
+          const { x, y } = of(this)
           runs++
         }
         @fn update() {
@@ -562,7 +562,7 @@ export function test_signal() {
         x?: number
         y?: number
         @fx read() {
-          const { x, y } = $.of(this)
+          const { x, y } = of(this)
           runs++
         }
         @fn update = () => {
@@ -615,7 +615,7 @@ export function test_signal() {
       class Foo {
         y = 0
         get x() {
-          return $.of(this).y + ++x
+          return of(this).y + ++x
         }
       }
       const foo = s$(new Foo())
@@ -631,7 +631,7 @@ export function test_signal() {
       class Foo {
         y?: number
         @nu get x() {
-          return $.of(this).y + ++x
+          return of(this).y + ++x
         }
       }
       const foo = s$(new Foo())
@@ -737,7 +737,7 @@ export function test_signal() {
         let count = 0
         $.fx(() => {
           count++
-          const { foo } = $.of(a)
+          const { foo } = of(a)
           res.push(foo)
         })
         expect(count).toEqual(1)
@@ -752,7 +752,7 @@ export function test_signal() {
         let count = 0
         $.fx(() => {
           count++
-          const { foo } = $.of(a)
+          const { foo } = of(a)
           throw new Error('erred')
         })
         expect(count).toEqual(1)
@@ -766,7 +766,7 @@ export function test_signal() {
       it('errors normally outside of fx', () => {
         const a = { x: null }
         expect(() => {
-          const { x } = $.of(a)
+          const { x } = of(a)
         }).toThrow('"x"')
       })
 
@@ -777,9 +777,9 @@ export function test_signal() {
         let count = 0
         $.fx(() => {
           count++
-          const { foo } = $.of(a)
+          const { foo } = of(a)
           $.batch(() => {
-            const { x } = $.of(b)
+            const { x } = of(b)
           })
         })
 
@@ -796,12 +796,12 @@ export function test_signal() {
         let out = ''
         $.fx(() => {
           out += 'a'
-          const { y, x } = $.of(b)
+          const { y, x } = of(b)
           out += 'b'
         })
         $.fx(() => {
           out += 'c'
-          const { foo } = $.of(a)
+          const { foo } = of(a)
           out += 'd'
           $.batch(() => {
             out += 'e'
