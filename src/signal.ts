@@ -890,10 +890,26 @@ export function test_signal() {
     })
 
     describe('async unwrap', () => {
-      it('works', async () => {
+      it('async function', async () => {
         class Foo {
           bar = unwrap(async () => {
             return 42
+          })
+        }
+        let res: number[] = []
+        const foo = $(new Foo)
+        fx(() => {
+          const { bar } = of(foo)
+          res.push(bar)
+        })
+        expect(res).toEqual([])
+        await ticks(2)
+        expect(res).toEqual([42])
+      })
+      it('return promise', async () => {
+        class Foo {
+          bar = unwrap(() => {
+            return Promise.resolve(42)
           })
         }
         let res: number[] = []
