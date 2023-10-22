@@ -261,9 +261,16 @@ const s$: {
               }
               else if (typeof gen === 'function') {
                 initEffects.push({
-                  fx: async () => {
-                    s.value = await gen()
-                  },
+                  fx: fx(() => {
+                    let aborted = false
+                    gen().then((v: any) => {
+                      if (aborted) return
+                      s.value = v
+                    })
+                    return () => {
+                      aborted = true
+                    }
+                  }),
                   state
                 })
               }
