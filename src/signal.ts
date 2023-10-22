@@ -259,7 +259,7 @@ const s$: {
                 })
               }
               else {
-                throw new Err.InvalidUnwrapType(typeof state, s$)
+                throw new Err.InvalidUnwrapType(typeof state, unwrap)
                 // throw new TypeError('Unknown unwrap type.')
               }
             }
