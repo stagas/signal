@@ -261,16 +261,19 @@ const s$: {
               }
               else if (typeof gen === 'function') {
                 initEffects.push({
-                  fx: () => fx(() => {
-                    let aborted = false
-                    gen().then((v: any) => {
-                      if (aborted) return
-                      s.value = v
-                    })
-                    return () => {
-                      aborted = true
-                    }
-                  }),
+                  fx: function _fx(this: any) {
+                    const dispose = effect(function _fn() {
+                      let aborted = false
+                      gen().then((v: any) => {
+                        if (aborted) return
+                        s.value = v
+                      })
+                      return () => {
+                        aborted = true
+                      }
+                    }, this)
+                    this[__effects__].set(_fx, dispose)
+                  },
                   state
                 })
               }
