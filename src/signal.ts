@@ -949,6 +949,7 @@ export function test_signal() {
         await ticks(2)
         expect(res).toEqual([42])
         foo.x = 2
+        await ticks(1)
         expect(res).toEqual([42, 84])
       })
     })
