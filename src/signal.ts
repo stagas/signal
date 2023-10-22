@@ -913,7 +913,7 @@ export function test_signal() {
           res.push(bar)
         })
         expect(res).toEqual([])
-        await ticks(2)
+        await ticks(1)
         expect(res).toEqual([42])
       })
       it('return promise', async () => {
@@ -929,7 +929,7 @@ export function test_signal() {
           res.push(bar)
         })
         expect(res).toEqual([])
-        await ticks(2)
+        await ticks(1)
         expect(res).toEqual([42])
       })
       it('reruns on dep change', async () => {
