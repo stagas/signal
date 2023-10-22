@@ -402,6 +402,7 @@ export const nu: {
 
 export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T, init: T): T
 export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T): T | undefined
+export function unwrap<T>(fn: () => Promise<T>, init?: unknown): T | undefined
 export function unwrap<T>(obj: T, init?: unknown): Unwrap<T>
 export function unwrap<T>(obj: T, init?: unknown, init2?: unknown): Unwrap<T> {
   return {
@@ -871,6 +872,25 @@ export function test_signal() {
         expect(o.bar).toEqual(2)
         await timeout(20)
         expect(o.bar).toEqual(3)
+      })
+    })
+
+    describe('async unwrap', () => {
+      it('works', async () => {
+        class Foo {
+          bar = unwrap(async () => {
+            return 42
+          })
+        }
+        let res: number[] = []
+        const foo = $(new Foo)
+        fx(() => {
+          const { bar } = of(foo)
+          res.push(bar)
+        })
+        expect(res).toEqual([])
+        await ticks(2)
+        expect(res).toEqual([42])
       })
     })
   })
