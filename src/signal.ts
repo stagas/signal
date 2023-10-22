@@ -32,6 +32,7 @@ export type $<T> = {
   [__effects__]: Map<Fx, (unknown | EffectCleanup)>
 }
 
+// TODO: replace all errors with these
 export const Err = errs({
   InvalidSignalType: [TypeError],
   InvalidSignalClassPropType: [TypeError],
@@ -257,6 +258,9 @@ const s$: {
                   },
                   state
                 })
+              }
+              else if (gen.constructor.name === 'AsyncFunction') {
+                conosle.log('YEAY')
               }
               else {
                 throw new Err.InvalidUnwrapType(typeof state, s$)
