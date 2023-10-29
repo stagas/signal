@@ -91,8 +91,8 @@ const ctorsPropDecos = new Map<any, any>()
 const s$: {
   (): void
   // <T extends CtorArgs<any, any>>(a: T, args: T extends CtorArgs<any, infer U> ? U : never, p?: Props<T>): $<InstanceType<T>>
-  <T extends object>(a: Ctor<T>, p?: Props<T>): $<T>
-  <T extends object>(a: T, p?: Props<T>): $<T>
+  <T extends object, U extends Props<T>>(a: Ctor<T>, p?: U): $<T>
+  <T extends object, U extends Props<T>>(a: T, p?: U): $<T>
 } = function struct$(state?: any, props?: any): any {
   if (state === void 0) return untrack()
   if (isStruct(state)) return assign(state, props)
