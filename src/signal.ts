@@ -1,7 +1,7 @@
 import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
-import { Computed, EffectCleanup, Fx, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when } from './signal-core.ts'
+import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot } from './signal-core.ts'
 
-export { of, when }
+export { of, when, whenNot, computed }
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
 
@@ -373,7 +373,7 @@ export const fn: {
 }
 
 export const fx: {
-  (c: () => unknown | EffectCleanup, thisArg?: any): () => void
+  (c: () => void | EffectCleanup | EffectCleanup[], thisArg?: any): Off
   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
 } = function fxDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
   if (isFunction(t)) {
@@ -785,6 +785,28 @@ export function test_signal() {
           a.foo = 42
         }).toThrow('erred')
       })
+
+      it('cleanup', () => {
+        const a = $({ foo: 6 as any })
+        const res: any[] = []
+        let count = 0
+        let cleanups = 0
+        $.fx(() => {
+          const { foo } = of(a)
+          count++
+          res.push(foo)
+          return () => {
+            cleanups++
+          }
+        })
+        expect(count).toEqual(1)
+        expect(cleanups).toEqual(0)
+        expect(res).toEqual([6])
+        a.foo = 42
+        expect(count).toEqual(2)
+        expect(cleanups).toEqual(1)
+      })
+
     })
 
     describe('of', () => {

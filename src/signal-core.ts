@@ -1,4 +1,4 @@
-import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, NonTruthyDependencyErrorSymbol } from 'utils'
+import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, BooleanDependencyErrorSymbol, requiredFalseyFast, chain } from 'utils'
 
 export type Fx = {
   [__fx__]?: true
@@ -80,9 +80,9 @@ type Node = {
   _rollbackNode?: Node | undefined
 }
 
-function startBatch() {
-  batchDepth++
-}
+// function startBatch() {
+//   batchDepth++
+// }
 
 function endBatch(force?: boolean) {
   if (batchDepth > 1 && !force) {
@@ -148,7 +148,7 @@ export function batch<T>(fn: () => T, thisArg?: any, args?: any): T {
       pos = prevPos
     }
   }
-	/*@__INLINE__**/ startBatch()
+	/*@__INLINE__**/ batchDepth++
   try {
     return fn.apply(thisArg, args)
   }
@@ -361,7 +361,7 @@ Signal.prototype.set = function (value) {
     this._version++
     globalVersion++
 
-    /**@__INLINE__*/ startBatch()
+    /**@__INLINE__*/ batchDepth++
     try {
       for (
         let node = this._targets;
@@ -752,7 +752,7 @@ function cleanupEffect(effect: Effect) {
   effect._cleanup = undefined
 
   if (typeof cleanup === "function") {
-		/*@__INLINE__**/ startBatch()
+		/*@__INLINE__**/ batchDepth++
 
     // Run cleanup functions always outside of any context.
     const prevContext = evalContext
@@ -805,9 +805,10 @@ function endEffect(this: Effect, prevContext?: Computed | Effect) {
 }
 
 export type EffectCleanup = () => unknown
+
 declare class Effect {
-  _compute?: (() => unknown | EffectCleanup) | undefined
-  _cleanup?: (() => unknown) | undefined
+  _compute?: (() => void | EffectCleanup | EffectCleanup[]) | undefined
+  _cleanup?: EffectCleanup | undefined
   _sources?: Node | undefined
   _nextBatchedEffect?: Effect | undefined
   _flags: number
@@ -821,7 +822,7 @@ declare class Effect {
   _dispose(): void
 }
 
-function Effect(this: Effect, compute: () => unknown | EffectCleanup, thisArg?: any) {
+function Effect(this: Effect, compute: () => void | EffectCleanup | EffectCleanup[], thisArg?: any) {
   this._compute = compute
   this._cleanup = undefined
   this._sources = undefined
@@ -836,14 +837,18 @@ Effect.prototype._callback = function () {
     if (this._flags & Flag.DISPOSED) return
     if (this._compute === undefined) return
 
+    this._cleanup?.()
     const cleanup = this._compute.call(this._thisArg)
     if (typeof cleanup === "function") {
       this._cleanup = cleanup as EffectCleanup
     }
+    else if (Array.isArray(cleanup)) {
+      this._cleanup = chain(cleanup) as EffectCleanup
+    }
   }
   catch (e) {
     if (e === MissingDependencyErrorSymbol
-      || e === NonTruthyDependencyErrorSymbol) { }
+      || e === BooleanDependencyErrorSymbol) { }
     else throw e
   }
   finally {
@@ -860,7 +865,7 @@ Effect.prototype._start = function () {
   cleanupEffect(this)
   prepareSources(this)
 
-	/*@__INLINE__**/ startBatch()
+	/*@__INLINE__**/ batchDepth++
   const prevContext = evalContext
   evalContext = this
   return endEffect.bind(this, prevContext)
@@ -882,7 +887,9 @@ Effect.prototype._dispose = function () {
   }
 }
 
-export function effect(c: () => unknown | EffectCleanup, thisArg?: any): () => void {
+export type Off = () => void
+
+export function effect(c: () => unknown | EffectCleanup, thisArg?: any): Off {
   const effect = new Effect(c, thisArg)
   const prevPos = pos
   try {
@@ -929,5 +936,14 @@ export function when<T extends object>(of: T): NonNull<T> {
   }
   else {
     throw new Error('Not implemented yet: "when" outside of effect.')
+  }
+}
+
+export function whenNot<T extends object>(of: T): NonNull<T> {
+  if (pos === Pos.EFFECT && evalContext) {
+    return requiredFalseyFast(of)
+  }
+  else {
+    throw new Error('Not implemented yet: "whenNot" outside of effect.')
   }
 }
