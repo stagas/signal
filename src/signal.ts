@@ -62,8 +62,8 @@ function isUnwrap(v: any): boolean {
   return v && v[__unwrap__]
 }
 
-export function alias<T, K extends keyof T>(of: T, from: K): T[K] {
-  return { [__prop__]: from } as any
+export function alias<T, K extends keyof T>(of: T, prop: K): T[K] {
+  return { [__prop__]: prop } as any
 }
 
 export function dispose(fx: unknown | EffectCleanup): void
@@ -417,6 +417,10 @@ export const nu: {
   d.get![__nulls__] = true
 }
 
+export const prop: {
+  <T>(c: () => T, setter?: (v: any) => void, thisArg?: any): T
+} = computed as any
+
 // export const unwrap: {
 //   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
 // } = function unwrapDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
@@ -475,6 +479,8 @@ export const $ = Object.assign(s$, {
   untrack,
   of,
   when,
+  whenNot,
+  prop,
   flush,
   _: untrack,
   // getBatchDepth() { return batchDepth },
