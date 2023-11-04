@@ -1,4 +1,4 @@
-import { DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
+import { BooleanDependencyErrorSymbol, DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
 import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot } from './signal-core.ts'
 
 export { of, when, whenNot, computed }
@@ -154,7 +154,8 @@ const s$: {
             return get.call(this)
           }
           catch (e) {
-            if (e === MissingDependencyErrorSymbol) { }
+            if (e === MissingDependencyErrorSymbol
+              || e === BooleanDependencyErrorSymbol) { }
             else throw e
           }
         }
