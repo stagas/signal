@@ -646,6 +646,7 @@ Computed.prototype._refresh = function () {
     prepareSources(this)
     evalContext = this
     pos = this._compute[__nulls__] ? Pos.EFFECT : Pos.COMPUTED
+    // console.log(this._thisArg?.constructor?.name, this._compute.name)
     const value = this._compute.call(this._thisArg)
     if (
       this._flags & Flag.HAS_ERROR ||

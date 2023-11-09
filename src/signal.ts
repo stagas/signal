@@ -88,6 +88,20 @@ const forbiddenKeys = new Set([
 const hidden = { configurable: false, enumerable: false }
 const ctorsPropDecos = new Map<any, any>()
 
+function getter(key: string, get: any) {
+  return Object.defineProperty(function _get(this: any) {
+    try {
+      // console.warn('get', this.constructor.name, key)
+      return get.call(this)
+    }
+    catch (e) {
+      if (e === MissingDependencyErrorSymbol
+        || e === BooleanDependencyErrorSymbol) { }
+      else throw e
+    }
+  }, 'name', { configurable: false, enumerable: false, value: 'get(computed) ' + key })
+}
+
 const s$: {
   (): void
   // <T extends CtorArgs<any, any>>(a: T, args: T extends CtorArgs<any, infer U> ? U : never, p?: Props<T>): $<InstanceType<T>>
@@ -148,17 +162,7 @@ const s$: {
     // getter turns into computed
     if (desc.get && !isPropSignal) {
       if (desc.get[__nulls__]) {
-        const get = desc.get
-        desc.get = function () {
-          try {
-            return get.call(this)
-          }
-          catch (e) {
-            if (e === MissingDependencyErrorSymbol
-              || e === BooleanDependencyErrorSymbol) { }
-            else throw e
-          }
-        }
+        desc.get = getter(key, desc.get)
         desc.get[__nulls__] = true
       }
       const s: Computed = computed(
