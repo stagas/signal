@@ -426,6 +426,20 @@ export const prop: {
   <T>(c: () => T, setter?: (v: any) => void, thisArg?: any): T
 } = computed as any
 
+export const flag: {
+  <T, K extends keyof T>(of: T, prop: K, flag: number): boolean //T[K]
+} = (obj: any, prop, flag) =>
+    computed(() => {
+      return obj[prop] & flag
+    }, (v) => {
+      if (v) {
+        obj[prop] |= flag
+      }
+      else {
+        obj[prop] &= ~flag
+      }
+    }) as any
+
 // export const unwrap: {
 //   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
 // } = function unwrapDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
@@ -474,6 +488,7 @@ export const $ = Object.assign(s$, {
   fx,
   init,
   alias,
+  flag,
   from,
   unwrap,
   nulls: nu,
