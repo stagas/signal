@@ -340,9 +340,11 @@ Object.defineProperty(Signal.prototype, 'value', {
 })
 
 Signal.prototype.get = function () {
-  const node = addDependency(this)
-  if (node !== undefined) {
-    node._version = this._version
+  if (evalContext) {
+    const node = addDependency(this)
+    if (node !== undefined) {
+      node._version = this._version
+    }
   }
   return this._value
 }
@@ -597,7 +599,7 @@ Computed.prototype.get = function () {
   if (this._flags & Flag.RUNNING) {
     cycleDetected()
   }
-  const node = addDependency(this)
+  const node = evalContext === undefined ? undefined : addDependency(this)
   this._refresh()
   if (node !== undefined) {
     node._version = this._version
