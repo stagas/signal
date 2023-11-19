@@ -16,6 +16,7 @@ function mutationDetected(): never {
 export const __signal__ = Symbol('signal')
 export const __fx__ = Symbol('fx')
 export const __nulls__ = Symbol('nulls')
+export const __keep__ = Symbol('keep')
 
 export const initEffects: { fx: Fx, state: any }[] = []
 
@@ -655,9 +656,11 @@ Computed.prototype._refresh = function () {
       this._value !== value ||
       this._version === 0
     ) {
-      this._value = value
-      this._flags &= ~Flag.HAS_ERROR
-      this._version++
+      if (value !== undefined || !this._compute[__keep__]) {
+        this._value = value
+        this._flags &= ~Flag.HAS_ERROR
+        this._version++
+      }
     }
   }
   catch (err) {

@@ -1,5 +1,5 @@
 import { BooleanDependencyErrorSymbol, DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
-import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot } from './signal-core.ts'
+import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __keep__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot } from './signal-core.ts'
 
 export { of, when, whenNot, computed }
 
@@ -422,6 +422,12 @@ export const nu: {
   d.get![__nulls__] = true
 }
 
+export const keep: {
+  (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
+} = function keepDecorator(t: object | (() => unknown), k: string, d: PropertyDescriptor): any {
+  d.get![__keep__] = true
+}
+
 export const prop: {
   <T>(c: () => T, setter?: (v: any) => void, thisArg?: any): T
 } = computed as any
@@ -492,6 +498,7 @@ export const $ = Object.assign(s$, {
   from,
   unwrap,
   nulls: nu,
+  keep,
   required,
   signal,
   effect,
