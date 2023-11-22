@@ -162,8 +162,10 @@ const s$: {
     // getter turns into computed
     if (desc.get && !isPropSignal) {
       if (desc.get[__nulls__]) {
+        const keep: any = desc.get[__keep__]
         desc.get = getter(key, desc.get)
         desc.get[__nulls__] = true
+        desc.get[__keep__] = keep
       }
       const s: Computed = computed(
         desc.get,
@@ -697,6 +699,24 @@ export function test_signal() {
       expect(foo.x).toBeUndefined()
       foo.y = 1
       expect(foo.x).toEqual(2)
+      expect(foo.x).toEqual(2)
+    })
+    it('nulls keep getter', () => {
+      let runs = 0
+      let x = 0
+      class Foo {
+        y?: number | null
+        @nu @keep get x() {
+          return of(this).y + ++x
+        }
+      }
+      const foo = s$(new Foo())
+      expect(foo.x).toBeUndefined()
+      expect(foo.x).toBeUndefined()
+      foo.y = 1
+      expect(foo.x).toEqual(2)
+      expect(foo.x).toEqual(2)
+      foo.y = null
       expect(foo.x).toEqual(2)
     })
     it('mirror signals in another struct', () => {
