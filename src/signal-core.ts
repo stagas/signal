@@ -1,4 +1,4 @@
-import { MissingDependencyErrorSymbol, required, requiredFast, NonNull, requiredTruthyFast, BooleanDependencyErrorSymbol, requiredFalseyFast, chain } from 'utils'
+import { BooleanDependencyErrorSymbol, MissingDependencyErrorSymbol, NonNull, chain, required, requiredFalseyFast, requiredFast, requiredTruthyFast } from 'utils'
 
 export type Fx = {
   [__fx__]?: true
@@ -36,13 +36,6 @@ const enum Flag {
   TRACKING = 1 << 5,
 }
 
-// const RUNNING = 1 << 0
-// const NOTIFIED = 1 << 1
-// const OUTDATED = 1 << 2
-// const DISPOSED = 1 << 3
-// const HAS_ERROR = 1 << 4
-// const TRACKING = 1 << 5
-
 let pos: any
 
 const enum Pos {
@@ -50,9 +43,6 @@ const enum Pos {
   BATCH = 1 << 1,
   COMPUTED = 1 << 2,
 }
-// const EFFECT = 1 << 0
-// const BATCH = 1 << 1
-// const COMPUTED = 1 << 2
 
 type EvalContext = Effect | Computed
 const ignored: (EvalContext | undefined)[] = []
@@ -743,10 +733,6 @@ Computed.prototype.peek = function () {
   }
   return this._value
 }
-
-// interface ReadonlySignal<T = any> extends Signal<T> {
-//   readonly value: T;
-// }
 
 export function computed<T>(compute: () => T, setter?: (v: any) => void, thisArg?: any): Computed<T> {
   return new Computed(compute, setter, thisArg)

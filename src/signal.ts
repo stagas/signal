@@ -1,19 +1,13 @@
 import { BooleanDependencyErrorSymbol, DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
 import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __keep__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot } from './signal-core.ts'
 
-export { of, when, whenNot, computed }
+export { computed, of, when, whenNot }
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
 
 type Ctor<T extends object> = {
   new(): T
 }
-
-type CtorArgs<T extends object, U extends unknown[]> = {
-  new(...args: U): T
-}
-
-// type CtorGuard<T> = T extends Ctor ? never : T
 
 type Props<T> = DeepPartial<T>
 
@@ -448,13 +442,6 @@ export const flag: {
       }
     }) as any
 
-// export const unwrap: {
-//   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
-// } = function unwrapDecorator(t: object | (() => unknown), k?: string, d?: PropertyDescriptor): any {
-//   d.value[__unwrap__] = true
-//   return d
-// }
-
 export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T, init: T): T
 export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T): T | undefined
 export function unwrap<T>(fn: () => Promise<T>, init?: unknown): T | undefined
@@ -512,7 +499,6 @@ export const $ = Object.assign(s$, {
   prop,
   flush,
   _: untrack,
-  // getBatchDepth() { return batchDepth },
 })
 
 export default $
