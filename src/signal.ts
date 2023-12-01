@@ -395,7 +395,7 @@ export const fx: {
 
 export const init: {
   (t: object, k: string, d: PropertyDescriptor): PropertyDescriptor
-} = function initDecorator(t: object | (() => unknown), k: string, d: PropertyDescriptor): any {
+} = function initDecorator(t: object, k: string, d: PropertyDescriptor): any {
   const fn = d.value
   d.value = function _fx() {
     if (this[__effects__].has(_fx)) {
