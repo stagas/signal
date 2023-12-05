@@ -19,11 +19,30 @@ export const __nulls__ = Symbol('nulls')
 export const __keep__ = Symbol('keep')
 
 export const initEffects: { fx: Fx, state: any }[] = []
+export const tailEffects: (() => any)[] = []
+export const nextEffects: (() => any)[] = []
 
+function callInitFx({ fx, state }: any) {
+  fx.call(state)
+}
+function callFn(fn: any) {
+  fn()
+}
 export function callInitEffects() {
-  initEffects.splice(0).forEach(({ fx, state }) =>
-    fx.call(state)
-  )
+  initEffects.splice(0).forEach(callInitFx)
+}
+export function callTailEffects() {
+  tailEffects.splice(0).forEach(callFn)
+}
+export function callNextEffects() {
+  nextEffects.splice(0).forEach(callFn)
+}
+
+export function tail(fn: () => any) {
+  tailEffects.push(fn)
+}
+export function next(fn: () => any) {
+  nextEffects.push(fn)
 }
 
 // Flags for Computed and Effect.
@@ -121,6 +140,8 @@ function endBatch(force?: boolean) {
 
   if (!batchDepth || force) {
     callInitEffects()
+    callTailEffects()
+    if (nextEffects.length) queueMicrotask(callNextEffects)
   }
 
   if (hasError) {

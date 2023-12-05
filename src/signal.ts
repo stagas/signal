@@ -1,5 +1,5 @@
 import { BooleanDependencyErrorSymbol, DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
-import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __keep__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot } from './signal-core.ts'
+import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __keep__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot, tail, next } from './signal-core.ts'
 
 export { computed, of, when, whenNot }
 
@@ -498,6 +498,8 @@ export const $ = Object.assign(s$, {
   whenNot,
   prop,
   flush,
+  tail,
+  next,
   _: untrack,
 })
 
