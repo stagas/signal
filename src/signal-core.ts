@@ -910,7 +910,14 @@ export function untrack(callback?: () => any) {
   evalContext = undefined
 }
 
-export const flush = endBatch.bind(null, true)
+export function flush() {
+  try {
+    endBatch(true)
+  }
+  catch {
+    // ignore
+  }
+}
 
 export function of<T extends object>(of: T): NonNull<T> {
   if (pos === Pos.EFFECT && evalContext) {

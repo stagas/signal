@@ -85,7 +85,6 @@ const ctorsPropDecos = new Map<any, any>()
 function getter(key: string, get: any) {
   return Object.defineProperty(function _get(this: any) {
     try {
-      // console.warn('get', this.constructor.name, key)
       return get.call(this)
     }
     catch (e) {
