@@ -2,7 +2,7 @@
   "name": "signal",
   "version": "1.0.0",
   "description": "Signal",
-  "main": "src/signal.ts",
+  "main": "src/index.ts",
   "type": "module",
   "keywords": [],
   "author": "stagas",
