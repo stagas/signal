@@ -12,7 +12,7 @@
     "@types/jest": "*"
   },
   "dependencies": {
-    "utils": "file:../utils"
+    "utils": "github:stagas/utils"
   },
   "scripts": {
     "test": "utr --bro src/index.ts"
