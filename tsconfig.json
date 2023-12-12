@@ -1,6 +1,5 @@
 {
   "include": [
-    "ambient.d.ts",
     "src"
   ],
   "compilerOptions": {

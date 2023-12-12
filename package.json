@@ -2,19 +2,17 @@
   "name": "signal",
   "version": "1.0.0",
   "description": "Signal",
-  "main": "src/index.ts",
   "type": "module",
-  "keywords": [],
+  "main": "src/index.ts",
   "author": "stagas",
-  "license": "MIT",
-  "devDependencies": {
-    "@total-typescript/ts-reset": "*",
-    "@types/jest": "*"
-  },
-  "dependencies": {
-    "utils": "file:../utils"
-  },
+  "license": "AGPLv3",
   "scripts": {
     "test": "utr --bro src/index.ts"
+  },
+  "devDependencies": {
+    "ambient-dts": "github:stagas/ambient-dts"
+  },
+  "dependencies": {
+    "utils": "github:stagas/utils"
   }
 }
