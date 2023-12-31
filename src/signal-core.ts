@@ -149,7 +149,19 @@ function endBatch(force?: boolean) {
   }
 }
 
-export function batch<T>(fn: () => T, thisArg?: any, args?: any): T {
+export function batchBegin() {
+  let prevPos = pos
+  batchDepth++
+  return () => {
+    pos = prevPos
+    endBatch()
+  }
+}
+
+export function batch(): () => void
+export function batch<T>(fn: () => T, thisArg?: any, args?: any): T
+export function batch<T>(fn?: () => T, thisArg?: any, args?: any): T | (() => void) {
+  if (!fn) return batchBegin()
   const prevPos = pos
   if (batchDepth > 0) {
     try {
