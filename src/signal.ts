@@ -39,6 +39,7 @@ const __signals__ = Symbol('signals')
 const __effects__ = Symbol('effects')
 const __fn__ = Symbol('fn')
 const __unwrap__ = Symbol('unwrap')
+const __storage__ = Symbol('storage')
 
 function isSignal(v: any): v is Signal {
   return v && v[__signal__]
@@ -282,6 +283,29 @@ const s$: {
                 throw new Err.InvalidUnwrapType(typeof state, s$)
               }
             }
+            else if (__storage__ in p) {
+              let v = p[__storage__]
+              if (typeof v === 'number') {
+                if (key in localStorage) {
+                  v = parseFloat(localStorage.getItem(key) ?? '0') || 0
+                }
+              }
+              else if (typeof v === 'string') {
+                if (key in localStorage) {
+                  v = localStorage.getItem(key)
+                }
+              }
+              s = signal(v)
+              initEffects.push({
+                fx: function _fx(this: any) {
+                  const off = fx(() => {
+                    localStorage.setItem(key, s.value)
+                  })
+                  state[__effects__].set(_fx, off)
+                },
+                state
+              })
+            }
             else {
               throw new Err.InvalidSignalClassPropType(typeof state, s$)
             }
@@ -461,6 +485,14 @@ export function unwrap<T>(obj: T, init?: unknown, init2?: unknown): Unwrap<T> {
   } as any
 }
 
+export function storage<T>(value: T): T {
+  return {
+    [__prop__]: {
+      [__storage__]: value
+    }
+  } as any
+}
+
 export function from<T extends object>(it: T): T {
   const path: string[] = []
   const proxy = new Proxy(it, {
@@ -500,6 +532,7 @@ export const $ = Object.assign(s$, {
   flush,
   tail,
   next,
+  storage,
   _: untrack,
 })
 
