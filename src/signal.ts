@@ -295,11 +295,20 @@ const s$: {
                   v = localStorage.getItem(key)
                 }
               }
+              else if (typeof v === 'boolean') {
+                if (key in localStorage) {
+                  v = Boolean(+(localStorage.getItem(key) ?? 0))
+                }
+              }
               s = signal(v)
               initEffects.push({
                 fx: function _fx(this: any) {
                   const off = fx(() => {
-                    localStorage.setItem(key, s.value)
+                    localStorage.setItem(key,
+                      typeof s.value === 'boolean'
+                        ? +s.value
+                        : s.value
+                    )
                   })
                   state[__effects__].set(_fx, off)
                 },
