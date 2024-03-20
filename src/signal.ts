@@ -547,8 +547,7 @@ export const $ = Object.assign(s$, {
 
 export default $
 
-export function test_signal() {
-  // @env browser
+if (import.meta.vitest) {
   describe('Signal', () => {
     // it('class decorator', () => {
     //   let runs = 0
