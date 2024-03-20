@@ -758,7 +758,42 @@ if (import.meta.vitest) {
       expect(a.x).toEqual(1)
       expect(b.y).toEqual(1)
     })
+    it('mirror signals in props', () => {
+      const a = $({ x: 0 })
+      const b = $({ x: 0 }, { x: a.$.x })
+      expect(a.x).toEqual(0)
+      expect(b.x).toEqual(0)
 
+      a.x = 1
+      expect(a.x).toEqual(1)
+      expect(b.x).toEqual(1)
+
+      b.x = 2
+      expect(a.x).toEqual(2)
+      expect(b.x).toEqual(2)
+    })
+    // it('mirror signals in props from other signals', () => {
+    //   const a = $({ x: 0 })
+    //   const b = $(new class {
+    //     constructor(
+    //       public p = $({ x: 0 }),
+    //       public x = p.$.x
+    //     ) {}
+    //   }, { x: a.$.x })
+    //   expect(a.x).toEqual(0)
+    //   expect(b.x).toEqual(0)
+    //   expect(b.p.x).toEqual(0)
+
+    //   a.x = 1
+    //   expect(a.x).toEqual(1)
+    //   expect(b.x).toEqual(1)
+    //   expect(b.p.x).toEqual(1)
+
+    //   b.x = 2
+    //   expect(a.x).toEqual(2)
+    //   expect(b.x).toEqual(2)
+    //   expect(b.p.x).toEqual(2)
+    // })
     it('mirror computed in another struct', () => {
       const a = $({
         v: 0,
