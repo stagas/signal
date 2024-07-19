@@ -300,14 +300,24 @@ const s$: {
                   v = Boolean(+(localStorage.getItem(key) ?? 0))
                 }
               }
+              else {
+                if (key in localStorage) {
+                  try {
+                    v = JSON.parse(localStorage.getItem(key) ?? '{}')
+                  }
+                  catch { }
+                }
+              }
               s = signal(v)
               initEffects.push({
                 fx: function _fx(this: any) {
                   const off = fx(() => {
                     localStorage.setItem(key,
-                      typeof s.value === 'boolean'
-                        ? +s.value
-                        : s.value
+                      typeof s.value === 'number' || typeof s.value === 'string'
+                        ? String(s.value)
+                        : typeof s.value === 'boolean'
+                          ? String(+s.value)
+                          : JSON.stringify(s.value)
                     )
                   })
                   state[__effects__].set(_fx, off)
