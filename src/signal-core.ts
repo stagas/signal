@@ -871,9 +871,10 @@ Effect.prototype._callback = function () {
     }
   }
   catch (e) {
-    if (e === MissingDependencyErrorSymbol
-      || e === BooleanDependencyErrorSymbol) { }
-    else throw e
+    if (e !== MissingDependencyErrorSymbol
+      && e !== BooleanDependencyErrorSymbol) {
+      throw e
+    }
   }
   finally {
     finish()

@@ -7,7 +7,7 @@
   "author": "stagas",
   "license": "AGPLv3",
   "scripts": {
-    "test": "utr --bro src/index.ts"
+    "test": "vitest run"
   },
   "devDependencies": {
     "ambient-dts": "github:stagas/ambient-dts",

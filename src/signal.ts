@@ -1,7 +1,7 @@
-import { BooleanDependencyErrorSymbol, DeepPartial, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
-import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __keep__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, of, signal, untrack, when, whenNot, tail, next } from './signal-core.ts'
+import { BooleanDependencyErrorSymbol, MissingDependencyErrorSymbol, assign, callbackify, deepMerge, errs, getAllPropertyDescriptors, getPropertyDescriptor, isFunction, isObject, isObjectLiteral, iterify, required, ticks, timeout, uniterify } from 'utils'
+import { Computed, EffectCleanup, Fx, Off, Signal, __fx__, __keep__, __nulls__, __signal__, batch, batchDepth, callInitEffects, computed, effect, flush, initEffects, next, of, signal, tail, untrack, when, whenNot } from './signal-core.ts'
 
-export { computed, of, when, whenNot, untrack, batch, tail }
+export { Signal, batch, computed, of, tail, untrack, when, whenNot }
 
 type Signals<T> = { [K in keyof T]: Signal<T[K]> }
 
@@ -9,7 +9,11 @@ type Ctor<T extends object> = {
   new(): T
 }
 
-type Props<T> = DeepPartial<T>
+type Props<T> = { [K in keyof T]?:
+  T[K] extends object
+  ? Props<T[K]>
+  : T[K] | Signal<T[K]>
+}
 
 type From = {
   it: any
@@ -21,7 +25,9 @@ type Unwrap<T> = T extends () => AsyncGenerator<infer U, any, any> ? U | undefin
 export type $<T> = {
   [K in keyof T]: T[K]
 } & {
-  $: T
+  $: {
+    [K in keyof T]: Signal<T[K]>
+  }
   [__signals__]: Signals<T>
   [__effects__]: Map<Fx, (unknown | EffectCleanup)>
 }
