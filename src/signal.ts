@@ -20,13 +20,13 @@ type From = {
   path: string[]
 }
 
-type Unwrap<T> = T extends () => AsyncGenerator<infer U, any, any> ? U | undefined : T extends Promise<infer U> ? U | undefined : T
+type Unwrap<T> = T extends () => AsyncGenerator<infer U, any, any> ? U | Error | undefined : T extends Promise<infer U> ? U | Error | undefined : T
 
 export type $<T> = {
-  [K in keyof T]: T[K]
+  [K in keyof T]: T[K] extends Signal<infer U> ? U : T[K]
 } & {
   $: {
-    [K in keyof T]: Signal<T[K]>
+    [K in keyof T]: T[K] extends Signal ? T[K] : Signal<T[K]>
   }
   [__signals__]: Signals<T>
   [__effects__]: Map<Fx, (unknown | EffectCleanup)>
@@ -53,6 +53,7 @@ function isSignal(v: any): v is Signal {
 function isProp(v: any): v is Signal {
   return v && v[__prop__]
 }
+// @ts-ignore
 function isStruct<T>(v: T): v is $<T> {
   return v && v[__struct__]
 }
@@ -272,10 +273,14 @@ const s$: {
                   fx: function _fx(this: any) {
                     const dispose = effect(function _fn() {
                       let aborted = false
-                      gen().then((v: any) => {
-                        if (aborted) return
-                        s.value = v
-                      })
+                      gen()
+                        .then((v: any) => {
+                          if (aborted) return
+                          s.value = v
+                        }).catch((e: unknown) => {
+                          if (aborted) return
+                          s.value = e
+                        })
                       return () => {
                         aborted = true
                       }
@@ -493,7 +498,7 @@ export const flag: {
 
 export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T, init: T): T
 export function unwrap<T, U>(it: AsyncIterableIterator<U>, cb: (v: U) => T): T | undefined
-export function unwrap<T>(fn: () => Promise<T>, init?: unknown): T | undefined
+export function unwrap<T>(fn: () => Promise<T>, init?: unknown): T | Error | undefined
 export function unwrap<T>(obj: T, init?: unknown): Unwrap<T>
 export function unwrap<T>(obj: T, init?: unknown, init2?: unknown): Unwrap<T> {
   return {
@@ -1065,6 +1070,7 @@ if (import.meta.vitest) {
         const foo = $(new Foo)
         fx(() => {
           const { bar } = of(foo)
+          if (bar instanceof Error) return
           res.push(bar)
         })
         expect(res).toEqual([])
@@ -1081,6 +1087,7 @@ if (import.meta.vitest) {
         const foo = $(new Foo)
         fx(() => {
           const { bar } = of(foo)
+          if (bar instanceof Error) return
           res.push(bar)
         })
         expect(res).toEqual([])
@@ -1098,6 +1105,7 @@ if (import.meta.vitest) {
         const foo = $(new Foo)
         fx(() => {
           const { bar } = of(foo)
+          if (bar instanceof Error) return
           res.push(bar)
         })
         expect(res).toEqual([])
