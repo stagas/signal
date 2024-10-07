@@ -277,7 +277,8 @@ const s$: {
                         .then((v: any) => {
                           if (aborted) return
                           s.value = v
-                        }).catch((e: unknown) => {
+                        })
+                        .catch((e: unknown) => {
                           if (aborted) return
                           s.value = e
                         })
