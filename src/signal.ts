@@ -104,7 +104,7 @@ function getter(key: string, get: any) {
 }
 
 const s$: {
-  (): void
+  (): Promise<void>
   // <T extends CtorArgs<any, any>>(a: T, args: T extends CtorArgs<any, infer U> ? U : never, p?: Props<T>): $<InstanceType<T>>
   <T extends object>(a: T): $<T>
   <T extends object, U extends Props<T>>(a: Ctor<T>, p?: U): $<T>

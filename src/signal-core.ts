@@ -828,7 +828,7 @@ function endEffect(this: Effect, prevContext?: Computed | Effect) {
   endBatch()
 }
 
-export type EffectCleanup = () => unknown
+export type EffectCleanup = (() => unknown) | false
 
 declare class Effect {
   _compute?: (() => void | EffectCleanup | EffectCleanup[]) | undefined
@@ -861,7 +861,7 @@ Effect.prototype._callback = function () {
     if (this._flags & Flag.DISPOSED) return
     if (this._compute === undefined) return
 
-    this._cleanup?.()
+    this._cleanup && this._cleanup()
     const cleanup = this._compute.call(this._thisArg)
     if (typeof cleanup === "function") {
       this._cleanup = cleanup as EffectCleanup
@@ -936,12 +936,14 @@ export function effect(c: () => unknown | EffectCleanup, thisArg?: any): Off {
   }
 }
 
+let resolved = Promise.resolve()
 export function untrack<T>(c: () => T): T
-export function untrack(): void
+export function untrack(): Promise<void>
 export function untrack(callback?: () => any) {
   if (callback) return untracked(callback)
   ignored.push(evalContext)
   evalContext = undefined
+  return resolved
 }
 
 export function flush() {
