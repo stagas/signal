@@ -947,12 +947,12 @@ export function untrack(callback?: () => any) {
 }
 
 export function flush() {
-  try {
-    endBatch(true)
-  }
-  catch {
-    // ignore
-  }
+  // try {
+  endBatch(true)
+  // }
+  // catch(err) {
+  //   // ignore
+  // }
 }
 
 export function of<T extends object>(of: T): NonNull<T> {
